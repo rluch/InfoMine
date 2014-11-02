@@ -1,0 +1,24 @@
+#! /usr/bin/env python
+"""InfoMine Gender Identification.
+
+Usage: infomine <dbtable>
+       infomine extract
+       infomine --version
+       infomine (-h | --help)
+
+"""
+import sys
+
+from docopt import docopt
+
+import infomine
+
+
+if __name__ == '__main__':
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    args = docopt(__doc__, version=infomine.__version__)
+    try:
+        print(infomine.InfoMiner(args['dbtable']))
+    except ValueError as e:
+        sys.exit(e)

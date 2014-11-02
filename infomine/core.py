@@ -17,7 +17,7 @@ __author_email__ = 's103214@student.dtu.dk, s123344@student.dtu.dk'
 _numerals = {'I': 1, 'V': 5, 'X': 10}
 
 
-class Roman(int):
+class InfoMiner(int):
 
     """Roman numeral."""
 
