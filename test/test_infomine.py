@@ -6,3 +6,7 @@ from infomine import InfoMiner
 def test_dummy():
     assert 1 == 1
     #assert Roman('X') == 10
+
+
+def test_gender_classifier():
+    assert 1 == 1
