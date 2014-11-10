@@ -13,11 +13,11 @@ class DataCollection():
         pigenavne = []
         unisexnavne = []
 
-        with open("/Users/Henrik/InfoMine/data/drengenavne.csv", "r") as in_file:
+        with open("data/drengenavne.csv", "r") as in_file:
             for line in csv.reader(in_file):
                 drengenavne.append(line[0].lower())
 
-        with open("/Users/Henrik/InfoMine/data/pigenavne.csv", "r") as in_file:
+        with open("data/pigenavne.csv", "r") as in_file:
             for line in csv.reader(in_file):
                 pigenavne.append(line[0].lower())
 
