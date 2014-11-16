@@ -10,20 +10,29 @@ class gender_classifier():
     def tokenize_line(self, comment):
         return nltk.word_tokenize(comment)
 
+    def sentiment_danish_words(self):
+        word = []
+        sentScore = []
+
+        # Pair each wood with its average sentiment
+        with open("/Users/Henrik/InfoMine/data/Nielsen2011Sentiment_afinndk-2.txt", 'r') as in_file:
+            for line in in_file.readlines()[0:]:
+                word.append(line.split('\t')[0]) # Each column in the file is tab seperated
+                tab_split= line.split('\t')[1]
+                newline_split = tab_split.split('\n')[0]
+                sentScore.append(newline_split)
+
+        sentiment = dict(zip(word, sentScore))
+
+        return sentiment
+
     def preprocessing(self, comment):
         features = {}
-        words_without_stopwords = []
         words = nltk.word_tokenize(comment.decode("utf-8"))
         sentences = nltk.sent_tokenize(comment.decode("utf-8"))
         features["number_of_words"] = len(words)
         features["number_of_sentences"] = len(sentences)
 
-        #for word in words:
-        #    if word not in nltk.corpus.stopwords.words('danish'): #and word not in ':.,-@#"\'':
-        #        if word not in features:
-        #             words_without_stopwords.append(word)
-        #print words_without_stopwords
-        #features["number_of_words_without_stopwords"] = len(words_without_stopwords)
         return features
 
     def naive_bayes_classification(self, features):
@@ -65,8 +74,9 @@ class gender_classifier():
 
 training = DataCollection().load_gender_with_comments_from_file("gender_and_comments")
 #testing = gender_classifier().preprocessing(training[50][0])
-featureSet = gender_classifier().naive_bayes_classification(training)
-#print testing
+#featureSet = gender_classifier().naive_bayes_classification(training)
+sentiment = gender_classifier().sentiment_danish_words()
+print sentiment
 
 #whodat = gender_classifier("""@Torben Nielsen: Vi skal passe på, at vi ikke lader os styre af frygt.
 #Da jeg var ung, skulle vi alle sammen være bange for russerne. Det viste sig senere, at de ikke var farligere end andre mennesker. Så skulle vi være bange for AIDS. Vi er adskillige, som har fået vores sexuelle debut uden at bukke under for AIDS.
