@@ -15,15 +15,15 @@ class DataCollection:
         pigenavne = []
         unisexnavne = []
 
-        with open("data/drengenavne.csv", "r") as in_file:
+        with open("/Users/Henrik/InfoMine/data/drengenavne.csv", "r") as in_file:
             for line in csv.reader(in_file):
                 drengenavne.append(line[0].lower())
 
-        with open("data/pigenavne.csv", "r") as in_file:
+        with open("/Users/Henrik/InfoMine/data/pigenavne.csv", "r") as in_file:
             for line in csv.reader(in_file):
                 pigenavne.append(line[0].lower())
 
-        with open("data/unisexnavne.csv", "r") as in_file:
+        with open("/Users/Henrik/InfoMine/data/unisexnavne.csv", "r") as in_file:
             for line in csv.reader(in_file):
                 unisexnavne.append(line[0].lower())
 
@@ -123,7 +123,7 @@ class DataCollection:
 
         with open(training_set_file, "r") as in_file:
             for line in csv.reader(in_file):
-                trainingSet.append((line[0], line[1]))
+                trainingSet.append((line[1], line[0]))
 
         return trainingSet
 
@@ -139,7 +139,7 @@ gender_data_set, c_data_set = dc.load_comments_from_database_and_combine_with_ge
 dc.save_gender_with_comments_to_file(gender_data_set,c_data_set,"testing")
 trainingSet = dc.load_gender_with_comments_from_file("testing")
 
-print trainingSet[0]
+#print trainingSet[0]
 
 #dc1 = DataCollection().load_gender_with_comments_from_file("testing")
 #print dc1[0]
