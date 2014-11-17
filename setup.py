@@ -7,7 +7,7 @@ from setuptools.command.test import test as TestCommand
 import infomine
 
 
-class ToxTestCommand(TestCommand):
+class PyTest(TestCommand):
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -15,7 +15,7 @@ class ToxTestCommand(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        sys.exit(os.system('tox'))
+        sys.exit(os.system('py.test'))
 
 
 setup(
@@ -25,18 +25,17 @@ setup(
     author_email=infomine.__author_email__,
     description=infomine.__doc__,
     license='MIT',
-    keywords='roman numerals',
+    keywords='infomine infominer',
     url='http://github.com/rluch/infomine',
     packages=find_packages(exclude="test"),
     py_modules=['infomine'],
     long_description=open('README.rst').read(),
     install_requires=['docopt>=0.6.0,<0.7.0'],
-    cmdclass={'test': ToxTestCommand},
-    tests_require=['tox'],
+    cmdclass={'test': PyTest},
+    tests_require=['pytest'],
     scripts=['bin/infominer'],
     classifiers=[
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'License :: OSI Approved :: MIT License',
     ],
 )
