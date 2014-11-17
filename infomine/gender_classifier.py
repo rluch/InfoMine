@@ -4,11 +4,25 @@
 import nltk
 ##print nltk.__version__
 from collections import Counter
-import DataCollection as dc
+#import DataCollection as dc
+import csv
 
 # class gender_classifier():
 #     def tokenize_line(self, comment):
 #         return nltk.word_tokenize(comment)
+
+
+def load_gender_with_comments_from_file(filename):
+
+    training_set_file = filename+'.csv'
+
+    trainingSet = []
+
+    with open(training_set_file, "r") as in_file:
+        for line in csv.reader(in_file):
+            trainingSet.append((line[1], line[0]))
+
+    return trainingSet
 
 def sentiment_danish_words():
     word = []
@@ -95,11 +109,11 @@ def naive_bayes_classification(features, sentiment):
         #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
-training = dc.load_gender_with_comments_from_file("gender_and_comments")
+training = load_gender_with_comments_from_file("gender_and_comments")
 sentiment_danish = sentiment_danish_words()
 #testing = preprocessing(training[50][0], sentiment_danish)
 #print testing
-featureSet = naive_bayes_classification(training[0:20], sentiment_danish)
+featureSet = naive_bayes_classification(training[0:10], sentiment_danish)
 
 #print sentiment
 
