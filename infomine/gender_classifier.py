@@ -71,6 +71,7 @@ def naive_bayes_classification(features, sentiment):
 
     return featuresets
 
+### Rasmus ###
  #def feature_extractor(self, comment):
     # features = {}
     # words = nltk.word_tokenize(comment[0])
