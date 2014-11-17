@@ -1,7 +1,7 @@
 import os
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 import infomine
@@ -27,7 +27,7 @@ setup(
     license='MIT',
     keywords='roman numerals',
     url='http://github.com/rluch/infomine',
-    # packages=find_packages(),
+    packages=find_packages(exclude="test"),
     py_modules=['infomine'],
     long_description=open('README.rst').read(),
     install_requires=['docopt>=0.6.0,<0.7.0'],
