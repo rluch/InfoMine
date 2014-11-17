@@ -10,16 +10,17 @@ def read_in_danish_names_from_files():
     drengenavne = []
     pigenavne = []
     unisexnavne = []
-
-    with open("/Users/Henrik/InfoMine/data/drengenavne.csv", "r") as in_file:
+    data_dir = os.path.join(os.path.dirname(__file__), '../data')
+    
+    with open(os.path.join(data_dir, "drengenavne.csv"), "r") as in_file:
         for line in csv.reader(in_file):
             drengenavne.append(line[0].lower())
 
-    with open("/Users/Henrik/InfoMine/data/pigenavne.csv", "r") as in_file:
+    with open(os.path.join(data_dir, "pigenavne.csv"), "r") as in_file:
         for line in csv.reader(in_file):
             pigenavne.append(line[0].lower())
 
-    with open("/Users/Henrik/InfoMine/data/unisexnavne.csv", "r") as in_file:
+    with open(os.path.join(data_dir, "unisexnavne.csv"), "r") as in_file:
         for line in csv.reader(in_file):
             unisexnavne.append(line[0].lower())
 

@@ -13,9 +13,10 @@ import DataCollection as dc
 def sentiment_danish_words():
     word = []
     sentScore = []
-
+    data_dir = os.path.join(os.path.dirname(__file__), '../data')
+    
     # Pair each wood with its average sentiment
-    with open("/Users/Henrik/InfoMine/data/Nielsen2011Sentiment_afinndk-2.txt", 'r') as in_file:
+    with open(os.path.join(data_dir, 'Nielsen2011Sentiment_afinndk-2.txt'), 'r') as in_file:
         for line in in_file.readlines()[0:]:
             word.append(line.split('\t')[0]) # Each column in the file is tab seperated
             tab_split = line.split('\t')[1]
