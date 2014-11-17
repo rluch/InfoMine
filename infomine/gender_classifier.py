@@ -4,7 +4,7 @@
 import nltk
 ##print nltk.__version__
 from collections import Counter
-from DataCollection import DataCollection
+import DataCollection as dc
 
 class gender_classifier():
     def tokenize_line(self, comment):
@@ -72,11 +72,12 @@ class gender_classifier():
         #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
-training = DataCollection().load_gender_with_comments_from_file("gender_and_comments")
+training = dc.load_gender_with_comments_from_file("gender_and_comments")
 #testing = gender_classifier().preprocessing(training[50][0])
-#featureSet = gender_classifier().naive_bayes_classification(training)
-sentiment = gender_classifier().sentiment_danish_words()
-print sentiment
+featureSet = gender_classifier().naive_bayes_classification(training)
+#sentiment = gender_classifier().sentiment_danish_words()
+#print sentiment
+
 
 #whodat = gender_classifier("""@Torben Nielsen: Vi skal passe på, at vi ikke lader os styre af frygt.
 #Da jeg var ung, skulle vi alle sammen være bange for russerne. Det viste sig senere, at de ikke var farligere end andre mennesker. Så skulle vi være bange for AIDS. Vi er adskillige, som har fået vores sexuelle debut uden at bukke under for AIDS.
