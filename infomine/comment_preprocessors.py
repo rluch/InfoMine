@@ -3,5 +3,5 @@
 """ Module containing methods for comment preprocessing (cleaning) """
 
 
-def citation_preprocessor(text):
+def citation_preprocessor(comments):
     pass

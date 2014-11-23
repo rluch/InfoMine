@@ -12,6 +12,7 @@ from sklearn import svm
 from sklearn import preprocessing
 import numpy as np
 import sklearn
+import data_helper
 
 
 # class gender_classifier():
@@ -20,7 +21,7 @@ import sklearn
 
 def load_gender_with_comments_from_file(filename):
 
-    training_set_file = filename+'.csv'
+    training_set_file = data_helper.get_data_file_path(filename+'.csv')
 
     trainingSet = []
 
