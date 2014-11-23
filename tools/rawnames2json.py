@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import codecs
-import re
 
 boy_names_dict = {}
 boy_names_str = u""
 
 girl_names_dict = {}
 girl_names_str = u""
+
 
 def parseNamesList(rawfilename):
     names_dict = {}
