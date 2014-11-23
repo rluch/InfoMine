@@ -1,10 +1,10 @@
 #MySQL-Connector-Python==2.0.2
-MySQL-python==1.2.5
+#MySQL-python==1.2.5
 coverage==3.7.1
 matplotlib==1.4.0
 networkx==1.9.1
 nltk==3.0.0
-numpy==1.9.0
+numpy>=1.8
 pandas==0.14.1
 pep8==1.5.7
 flake8==2.2.5
@@ -12,5 +12,6 @@ pyflakes==0.8.1
 pytest==2.6.3
 scikit-learn==0.15.2
 scipy==0.14.0
-pytest-pep8==2.4.2
-pep257-0.3.2
+pytest-pep8>=1.0.6
+pytest-flakes>=0.2
+pep257==0.3.2
