@@ -6,8 +6,8 @@ Installation
 ------------
 
 .. code::
-
-    pip install rome
+	pip install -r requirements.txt
+	python setup.py install
 
 
 Usage
@@ -16,6 +16,5 @@ Usage
 
 .. code:: python
 
-    >>> from rome import Roman
-    >>> Roman('X') + 5 == Roman('XV')
+    >>> ./infomine
     True
