@@ -2,6 +2,7 @@
 .cache
 .idea
 .tox
+.coverage
 *.egg-info
 *.egg
 venv
