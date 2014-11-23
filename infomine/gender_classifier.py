@@ -7,7 +7,9 @@ from collections import Counter
 #import DataCollection as dc
 import csv
 import os
-from sklearn import cross_validation, svm, preprocessing
+from sklearn import cross_validation
+from sklearn import svm
+from sklearn import preprocessing
 import numpy as np
 import sklearn
 
@@ -99,16 +101,23 @@ def feature_extractor_to_scikitLearn(featureset):
         number_of_sent.append(float(features[0]["number_of_sentences"]))
         sentiment.append(float(features[0]["average_sentiment"]))
         if features[1] == "Female":
-            label.append(1)
+            label.append([1])
         else:
-            label.append(0)
+            label.append([0])
 
     arraylist = np.array([number_of_words] + [number_of_sent] + [sentiment])
     Xfeatures = arraylist.transpose()
     Ylabel = np.array(label)
     #print Ylabel
-    ##print repr(Xfeatures)
-    return Xfeatures, Ylabel
+
+    #Standardize features
+    X_scaled = sklearn.preprocessing.scale(Xfeatures)
+
+    attributes_names = ["number_of_words", "number_of_sentences", "average_sentiment" ]
+    class_names = ["Female", "Male"]
+    #print Ylabel
+    #print X_scaled
+    return X_scaled, Ylabel
 
 def generate_feature_set(training, sentiment):
 
@@ -133,19 +142,54 @@ def svm_classification(Xfeatures, Ylabel):
 
     X = Xfeatures
     y = Ylabel
-    X_scaled = sklearn.preprocessing.scale(X)
 
-    splitdata = len(X_scaled)/2
-    X_train, X_test = X_scaled[:splitdata], X_scaled[splitdata:]
-    y_train, y_test = y[:splitdata], y[splitdata:]
+    #print X, y
+    N, M = X.shape
+    #print type(X), type(y)
 
-    clf = svm.SVC()
-    model = clf.fit(X_train, y_train)
-    y_est = model.predict(X_test)
+    ## Crossvalidation
+    # Create crossvalidation partition for evaluation
+    K = 4
+    #cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
+    cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
 
-    accuracy = sklearn.metrics.accuracy_score(y_test, y_est)
+    # Initialize variables
+    test_accuracy = np.empty((K,1))
 
-    return accuracy
+    k=0
+    for train_index, test_index in cv:
+
+        # extract training and test set for current CV fold
+        X_train = X[train_index,:]
+        y_train = y[train_index,:]
+        X_test = X[test_index,:]
+        y_test = y[test_index,:]
+
+        # Fit and evaluate Logistic Regression classifier
+        clf = svm.SVC()
+        clf.fit(X_train, y_train.ravel())
+        y_est = clf.predict(X_test)
+        test_accuracy[k] = sklearn.metrics.accuracy_score(y_test, y_est)
+
+        #y_logreg = np.mat(model.predict(X_test)).T
+        #Error_logreg[k] = 100*(y_est!=y_test).sum().astype(float)/len(y_test)
+
+        k+=1
+
+    #splitdata = len(X)/2
+
+    #X_train, X_test = X[splitdata:], X[:splitdata]
+    #y_train, y_test = y[splitdata:], y[:splitdata]
+
+    #clf = svm.SVC()
+    #clf.fit(X_train, y_train)
+    #y_est = clf.predict(X_test)
+
+
+    #test_accuracy = sklearn.metrics.accuracy_score(y_test, y_est)
+    #train_accuracy = sklearn.metrics.accuracy_score(y_train, y_est)
+
+    return test_accuracy
     #skf = cross_validation.StratifiedKFold(y, n_folds=2)
 
     #print skf
@@ -182,11 +226,12 @@ def svm_classification(Xfeatures, Ylabel):
         #print featuresets
 
 training = load_gender_with_comments_from_file("gender_and_comments")
+#print training[0:100]
 sentiment_danish = sentiment_danish_words()
 #testing = preprocessing(training[50][0], sentiment_danish)
 #print testing
-feature_set = generate_feature_set(training[0:1000], sentiment_danish)
-x, y = feature_extractor_to_scikitLearn(feature_set[0:1000])
+feature_set = generate_feature_set(training[0:600], sentiment_danish)
+x, y = feature_extractor_to_scikitLearn(feature_set[0:600])
 xtest = svm_classification(x, y)
 
 print xtest
