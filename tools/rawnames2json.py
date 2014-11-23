@@ -23,7 +23,7 @@ def parseNamesList(rawfilename):
 
     return names_str
 
-boys_csv = parseNamesList("boynames.raw")
-girls_csv = parseNamesList("girlnames.raw")
+boys_csv = parseNamesList("../data/boynames.raw")
+girls_csv = parseNamesList("../data/girlnames.raw")
 print boys_csv
 print girls_csv
