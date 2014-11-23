@@ -6,11 +6,15 @@ import nltk
 from collections import Counter
 #import DataCollection as dc
 import csv
+import os
+from sklearn import cross_validation, svm, preprocessing
+import numpy as np
+import sklearn
+
 
 # class gender_classifier():
 #     def tokenize_line(self, comment):
 #         return nltk.word_tokenize(comment)
-
 
 def load_gender_with_comments_from_file(filename):
 
@@ -32,7 +36,7 @@ def sentiment_danish_words():
     # Pair each wood with its average sentiment
     with open(os.path.join(data_dir, 'Nielsen2011Sentiment_afinndk-2.txt'), 'r') as in_file:
         for line in in_file.readlines()[0:]:
-            word.append(line.split('\t')[0]) # Each column in the file is tab seperated
+            word.append(line.split('\t')[0].decode("utf-8"))  # Each column in the file is tab seperated
             tab_split = line.split('\t')[1]
             newline_split = tab_split.split('\n')[0]
             sentScore.append(newline_split)
@@ -41,7 +45,22 @@ def sentiment_danish_words():
 
     return sentiment
 
-def preprocessing(comment, sentiment):
+def preprocessing(comments):
+
+    for c in comments:
+        words = nltk.word_tokenize(c.decode("utf-8"))
+
+        lower_words = []
+    
+        for word in words:
+            lower_words.append(word.lower())
+
+        comment = lower_word
+    return comment
+
+
+def feature_extractor(comment, sentiment):
+
     features = {}
     words = nltk.word_tokenize(comment.decode("utf-8"))
     sentences = nltk.sent_tokenize(comment.decode("utf-8"))
@@ -49,19 +68,18 @@ def preprocessing(comment, sentiment):
     features["number_of_sentences"] = len(sentences)
 
     lower_words = []
-    count = 0
-    sentValue = 0
-    
+
     for word in words:
         lower_words.append(word.lower())
 
-    #print list(filter((lambda key: key in lower_words), sentiment))
     # check if word appears in the dictionary created ealier.
+    count = 0
+    sentValue = 0
 
-    for key in sentiment:
+    for key, value in sentiment.iteritems():
         if key in lower_words:
             count += 1
-            sentValue += float(sentiment[key])
+            sentValue += int(value)
     if count > 0:
         avg_sent_of_comment = sentValue/count
     else:
@@ -69,22 +87,75 @@ def preprocessing(comment, sentiment):
     features["average_sentiment"] = avg_sent_of_comment
     return features
 
+def feature_extractor_to_scikitLearn(featureset):
 
-def naive_bayes_classification(features, sentiment):
+    number_of_words = []
+    number_of_sent = []
+    sentiment = []
+    label = []
 
-    splitdata = len(features)/2
+    for features in featureset:
+        number_of_words.append(float(features[0]["number_of_words"]))
+        number_of_sent.append(float(features[0]["number_of_sentences"]))
+        sentiment.append(float(features[0]["average_sentiment"]))
+        if features[1] == "Female":
+            label.append(1)
+        else:
+            label.append(0)
 
-    featuresets = [(preprocessing(comment, sentiment), gender) for (comment, gender) in features]
+    arraylist = np.array([number_of_words] + [number_of_sent] + [sentiment])
+    Xfeatures = arraylist.transpose()
+    Ylabel = np.array(label)
+    #print Ylabel
+    ##print repr(Xfeatures)
+    return Xfeatures, Ylabel
+
+def generate_feature_set(training, sentiment):
+
+    feature_set = [(feature_extractor(comment, sentiment), gender) for (comment, gender) in training]
+
+    return feature_set
+
+
+def naive_bayes_classification(featuresets):
+
+    splitdata = len(featuresets)/2
     train_set, test_set = featuresets[:splitdata], featuresets[splitdata:]
     classifier = nltk.NaiveBayesClassifier.train(train_set)
 
     test_accuracy = nltk.classify.accuracy(classifier, test_set)
     train_accuracy = nltk.classify.accuracy(classifier, train_set)
     classifier.show_most_informative_features(5)
-    print test_accuracy
-    print train_accuracy
 
-    return featuresets
+    return train_accuracy, test_accuracy
+
+def svm_classification(Xfeatures, Ylabel):
+
+    X = Xfeatures
+    y = Ylabel
+    X_scaled = sklearn.preprocessing.scale(X)
+
+    splitdata = len(X_scaled)/2
+    X_train, X_test = X_scaled[:splitdata], X_scaled[splitdata:]
+    y_train, y_test = y[:splitdata], y[splitdata:]
+
+    clf = svm.SVC()
+    model = clf.fit(X_train, y_train)
+    y_est = model.predict(X_test)
+
+    accuracy = sklearn.metrics.accuracy_score(y_test, y_est)
+
+    return accuracy
+    #skf = cross_validation.StratifiedKFold(y, n_folds=2)
+
+    #print skf
+
+    #for train_index, test_index in skf:
+    #    print("TRAIN:", train_index, "TEST:", test_index)
+    #    X_train, X_test = X[train_index], X[test_index]
+    #    y_train, y_test = y[train_index], y[test_index]
+
+    #return X_train, X_test
 
 ### Rasmus ###
  #def feature_extractor(self, comment):
@@ -107,14 +178,23 @@ def naive_bayes_classification(features, sentiment):
     #def __init__(self, comment):
         #features = self.preprocessing(comment)
         #featuresets = self.naive_bayes_classification(comment)
+        #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
 training = load_gender_with_comments_from_file("gender_and_comments")
 sentiment_danish = sentiment_danish_words()
 #testing = preprocessing(training[50][0], sentiment_danish)
 #print testing
-featureSet = naive_bayes_classification(training[0:10], sentiment_danish)
+feature_set = generate_feature_set(training[0:1000], sentiment_danish)
+x, y = feature_extractor_to_scikitLearn(feature_set[0:1000])
+xtest = svm_classification(x, y)
 
+print xtest
+#print feature_set[0][0]
+#classifier = naive_bayes_classification(feature_set)
+
+#comment = preprocessing(training[0:10])
+#print comment
 #print sentiment
 
 
