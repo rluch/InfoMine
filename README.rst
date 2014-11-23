@@ -27,4 +27,4 @@ Generating the analysis report:
 
 .. code:: python
 
-    >>> python infomine [-v]
+    >>> python infomine [-v] [--method (bayes|svm|adaboost|rforest)] [--file comments.dsv] [--delimiter] [COMMENT]
