@@ -7,6 +7,7 @@ nltk==3.0.0
 numpy>=1.8
 pandas==0.14.1
 pep8==1.5.7
+pep257==0.3.2
 flake8==2.2.5
 pyflakes==0.8.1
 scikit-learn==0.15.2
@@ -15,4 +16,3 @@ pytest==2.6.3
 pytest-pep8>=1.0.6
 pytest-flakes>=0.2
 pytest-cov>=1.8
-pep257==0.3.2
