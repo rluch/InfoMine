@@ -36,32 +36,34 @@ def read_in_danish_names_from_files():
 
 def load_firstnames_from_sql_dump():
 
-    firstname = []
+    user_inf = []
 
     cnx = mysql.connector.connect(user='root', password='',
                           host='127.0.0.1',
                           database='Information')
 
     cursor = cnx.cursor()
-    query = ("SELECT u_name FROM Information.inf_dtu_user")
+    query = ("SELECT u_name, u_uid FROM Information.inf_dtu_user")
     cursor.execute(query)
 
     for c in cursor:
         if c[0] != None:
             name = c[0]
-            firstname.append(name.split()[0].lower())
+            user_inf.append([name.split()[0].lower(), str(c[1]).decode("utf-8")])
 
     cursor.close()
     cnx.close()
 
-    return firstname
+    return user_inf
 
-def find_gender_by_name(firstname, drengenavne, pigenavne, unisexnavne):
+def find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne):
 
     gender_name_list = []
+    firstname = []
 
-    ## Find the male names that are also unisex names
-    #unisex_in_male = set(drengenavne).intersection(unisexnavne)
+    # Extract only names in to a list
+    for ui in user_inf:
+        firstname.append(ui[0])
 
     # Find all male names that is used in the comments and labels it minus unisex names
     male_name_list = set(drengenavne).intersection(set(firstname)) - set(unisexnavne)
@@ -69,13 +71,70 @@ def find_gender_by_name(firstname, drengenavne, pigenavne, unisexnavne):
     for mnl in male_name_list:
         gender_name_list.append((mnl,'Male'))
 
-    # Find all female names that is used in the comments and labels it minus unisex names
     female_name_list = set(pigenavne).intersection(set(firstname)) - set(unisexnavne)
 
     for fnl in female_name_list:
         gender_name_list.append((fnl,'Female'))
 
     return gender_name_list
+
+def NEW_load(user_inf, gender_name_list):
+
+    cnx = mysql.connector.connect(user='root', password='',
+                          host='127.0.0.1',
+                          database='Information')
+
+    cursor = cnx.cursor()
+    query = ("SELECT u.u_name, c.c_body, group_concat(cf.f_uid) As like_ids FROM Information.inf_dtu_user u, Information.inf_dtu_comment c,"
+             "Information.inf_dtu_comment_flag cf where u.u_uid=c.c_uid and c.c_cid = f_cid group by c.c_cid;")
+    cursor.execute(query)
+
+    like_names_comments = []
+    for c in cursor:
+        if c[0] != None:
+            name = c[0]
+            firstName = name.split()[0].lower()
+            comment = c[1]
+            like_ids = c[2].split(",")
+
+            #print like_ids
+            #print type(like_ids[0])
+            #for li in like_ids:
+            #    li = int(li)
+            #    if li in user_inf:
+            #        print user_inf
+            #print user_inf[1]
+            like_names = []
+            for ui in user_inf:
+                if ui[1] in like_ids:
+                    like_names.append(ui[0])
+
+            like_names_comments.append([firstName, comment, like_names])
+
+    #for gnl in gender_name_list:
+    #    if gnl[0] == firstName:
+    #        print ui[0]
+    #
+
+    for lnc in like_names_comments:
+        male_count = 0
+        female_count = 0
+        total_likes = 0
+        male_female_ratio = 0
+        for gnl in gender_name_list:
+            if gnl[0] in lnc[2]:
+                #if gnl[0] == "Male":
+                #    male_count += 1
+                #elif gnl[0] == "Female":
+                #    female_count += 1
+                #total_likes += 1
+                print gnl[1]
+                #name_list.append(name)
+                #c_data_set.append(comment)
+                #gender_data_set.append(gnl[1])
+
+    return like_names_comments
+
 
 def load_comments_from_database_and_combine_with_gender(gender_name_list):
 
@@ -135,6 +194,7 @@ def load_gender_with_comments_from_file(filename):
 
     return trainingSet
 
+'''
 drengenavne, pigenavne, unisexnavne = read_in_danish_names_from_files()
 firstname = load_firstnames_from_sql_dump()
 gender_name_list = find_gender_by_name(firstname, drengenavne, pigenavne, unisexnavne)
@@ -156,6 +216,8 @@ for t in trainingSet:
 
 total = cFemale + cMale
 ratio_male_to_female = cMale/total
+ratio_male_to_female_1 = cFemale/total
+print ratio_male_to_female_1
 print ratio_male_to_female
 print total
 print cFemale, cMale
@@ -171,6 +233,14 @@ width = 2
 plt.bar(indexes, values, width)
 #plt.xticks(indexes + width * 0.5, labels)
 plt.show()
+'''
+user_inf = load_firstnames_from_sql_dump()
+print user_inf[0]
+drengenavne, pigenavne, unisexnavne = read_in_danish_names_from_files()
+gender_name_list = find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne)
+
+like_names_comments = NEW_load(user_inf, gender_name_list)
+print like_names_comments[1][2]
 
 ## likes of comments
 # SELECT *, count(cf.f_uid) As favorites FROM Information.inf_dtu_user u, Information.inf_dtu_comment c,

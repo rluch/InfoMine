@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
 import nltk
 ##print nltk.__version__
 from collections import Counter
@@ -12,6 +13,7 @@ from sklearn import svm
 from sklearn import preprocessing
 from sklearn import ensemble
 from sklearn import linear_model
+from nltk.corpus import stopwords
 import numpy as np
 import sklearn
 import data_helper
@@ -55,16 +57,32 @@ def sentiment_danish_words():
 
 def preprocessing(comment):
 
-    for c in comments:
-        words = nltk.word_tokenize(c)
+    words = nltk.word_tokenize(comment)
 
-        lower_words = []
-    
-        for word in words:
-            lower_words.append(word.lower())
+    clean_words = []
 
-        comment = lower_word
-    return comment
+    danish_stem = nltk.stem.snowball.DanishStemmer()
+    for word in words:
+        if word.lower() not in stopwords.words('danish'):
+            clean_words.append(danish_stem.stem(word.lower()))
+
+    cleaned_comment = ""
+
+    for cw in clean_words:
+        cleaned_comment = cleaned_comment + " " + cw
+
+    return cleaned_comment
+
+
+def clean_comments(comments):
+
+    data_set = []
+
+    for com in comments:
+        clean_comment = preprocessing(com[0])
+        data_set.append((clean_comment, com[1]))
+
+    return data_set
 
 
 def feature_extractor(comment, sentiment):
@@ -86,42 +104,45 @@ def feature_extractor(comment, sentiment):
     sentences = nltk.sent_tokenize(comment)
     #part_of_speech = nltk.pos_tag(words)
     #print part_of_speech
+
     features["number_of_words"] = len(words)
     features["number_of_sentences"] = len(sentences)
+    features["lexical_diversity"] = len(comment) / len(set(comment))
 
-    lower_words = []
-
-    for word in words:
-        lower_words.append(word.lower())
-    features["gender_linked_cues_1"] = len(set(words).intersection(set(gender_linked_cues_1)))
-    features["gender_linked_cues_2"] = len(set(words).intersection(set(gender_linked_cues_2)))
-    features["gender_linked_cues_3"] = len(set(words).intersection(set(gender_linked_cues_3)))
-    features["gender_linked_cues_4"] = len(set(words).intersection(set(gender_linked_cues_4)))
-    features["gender_linked_cues_5"] = len(set(words).intersection(set(gender_linked_cues_5)))
-    features["gender_linked_cues_6"] = len(set(words).intersection(set(gender_linked_cues_6)))
-    features["gender_linked_cues_7"] = len(set(words).intersection(set(gender_linked_cues_7)))
-    # check if word appears in the dictionary created ealier.
+    features["gender_linked_cues_1"] = len(set(comment).intersection(set(gender_linked_cues_1)))
+    features["gender_linked_cues_2"] = len(set(comment).intersection(set(gender_linked_cues_2)))
+    features["gender_linked_cues_3"] = len(set(comment).intersection(set(gender_linked_cues_3)))
+    features["gender_linked_cues_4"] = len(set(comment).intersection(set(gender_linked_cues_4)))
+    features["gender_linked_cues_5"] = len(set(comment).intersection(set(gender_linked_cues_5)))
+    features["gender_linked_cues_6"] = len(set(comment).intersection(set(gender_linked_cues_6)))
+    features["gender_linked_cues_7"] = len(set(comment).intersection(set(gender_linked_cues_7)))
+    # check if word appears in the dictionary created earlier.
 
     sentValue = []
     for word, value in sentiment.iteritems():
-        if word in lower_words:
+        if word in comment:
             sentValue.append(int(value))
     if len(sentValue) > 0:
         avg_sent_of_comment = sum(sentValue)/len(sentValue)
-        abs_sent_of_comment = max(abs(i) for i in sentValue)
+        #abs_sent_of_comment = max(abs(i) for i in sentValue)
         min_sent_of_comment = min(sentValue)
+        max_sent_of_comment = max(sentValue)
     else:
         avg_sent_of_comment = 0
-        abs_sent_of_comment = 0
+        max_sent_of_comment = 0
         min_sent_of_comment = 0
 
     features["average_sentiment"] = avg_sent_of_comment
-    features["abs_sentiment"] = abs_sent_of_comment
-    #features["minimum_sentiment"] = min_sent_of_comment
-
-    ## LEXICAL DIVERSITY FEATURES ##
+    features["minimum_sentiment"] = min_sent_of_comment
+    features["maximum_sentiment"] = max_sent_of_comment
 
     return features
+
+def generate_feature_set(training, sentiment):
+
+    feature_set = [(feature_extractor(comment, sentiment), gender) for (comment, gender) in training]
+
+    return feature_set
 
 def feature_extractor_to_scikitLearn(featureset):
 
@@ -134,9 +155,10 @@ def feature_extractor_to_scikitLearn(featureset):
 
         now = float(features[0]["number_of_words"])
         nos = float(features[0]["number_of_sentences"])
+        lex_div = float(features[0]["lexical_diversity"])
         avg_sen = float(features[0]["average_sentiment"])
-        abs_sen = float(features[0]["abs_sentiment"])
-        #min_sen = float(features[0]["minimum_sentiment"])
+        max_sen = float(features[0]["maximum_sentiment"])
+        min_sen = float(features[0]["minimum_sentiment"])
         glc1 = float(features[0]["gender_linked_cues_1"])
         glc2 = float(features[0]["gender_linked_cues_2"])
         glc3 = float(features[0]["gender_linked_cues_3"])
@@ -145,7 +167,7 @@ def feature_extractor_to_scikitLearn(featureset):
         glc6 = float(features[0]["gender_linked_cues_6"])
         glc7 = float(features[0]["gender_linked_cues_7"])
 
-        feature_set.append([now, nos, avg_sen, abs_sen, glc1, glc2, glc3, glc4, glc5, glc6, glc7])
+        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, glc1, glc2, glc3, glc4, glc5, glc6, glc7])
         if features[1] == "Female":
             label.append([1])
         else:
@@ -165,12 +187,6 @@ def standardize_features(Xfeatures):
     X_scaled = sklearn.preprocessing.scale(Xfeatures)
 
     return X_scaled
-
-def generate_feature_set(training, sentiment):
-
-    feature_set = [(feature_extractor(comment, sentiment), gender) for (comment, gender) in training]
-
-    return feature_set
 
 def naive_bayes_classification(featuresets):
 
@@ -194,14 +210,16 @@ def classification(Xfeatures, Ylabel, algorithm):
 
     ## Crossvalidation
     # Create crossvalidation partition for evaluation
-    K = 10
-    #cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
-    cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
+    K = 5
+    cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
+    #cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
 
     # Initialize variables
     test_accuracy = np.empty((K,1))
+    train_accuracy = np.empty((K,1))
     feature_importance = np.empty([K,M])
-    k=0
+
+    k = 0
     for train_index, test_index in cv:
 
         # extract training and test set for current CV fold
@@ -223,18 +241,23 @@ def classification(Xfeatures, Ylabel, algorithm):
         clf.fit(X_train, y_train.ravel())
         y_est = clf.predict(X_test)
         test_accuracy[k] = sklearn.metrics.accuracy_score(y_test, y_est)
+        train_accuracy[k] = clf.score(X_train, y_train.ravel())
+        print sklearn.metrics.confusion_matrix(y_test, y_est)
 
-        if algorithm == "random_forest" or "ada_boost":
+        if algorithm in ["random_forest", "ada_boost"]:
             feature_importance[k] = clf.feature_importances_
+        k += 1
 
-        k+=1
 
     overall_test_accuracy = sum(test_accuracy)/len(test_accuracy)
+    overall_train_accuracy = sum(train_accuracy)/len(train_accuracy)
+
     if algorithm == "random_forest" or "ada_boost":
         overall_feature_importance = feature_importance.sum(axis=0)/len(feature_importance)
     else:
         overall_feature_importance = None
-    return overall_test_accuracy, overall_feature_importance
+
+    return overall_train_accuracy, overall_test_accuracy, overall_feature_importance
 
 def pca_plot(X, y, attributes_names, class_names):
 
@@ -274,46 +297,28 @@ def pca_plot(X, y, attributes_names, class_names):
 
     return f
 
-### Rasmus ###
- #def feature_extractor(self, comment):
-    # features = {}
-    # words = nltk.word_tokenize(comment[0])
-    # sentences = nltk.sent_tokenize(comment[0])
-    # print words
-    # features["number_of_words"] = len(words)
-    # features["number_of_sentences"] = len(sentences)
-    # #tokenized = self.tokenize_line(comment.translate(None, string.punctuation))
-    # #tokenized = self.tokenize_line(comment)
-    # #wordpunct_tokenize(raw)
-    # #for word in tokenized:
-    # #    if word not in nltk.corpus.stopwords.words('danish') and word not in '.,-@#"\'':
-    # #        if word not in features:
-    # #            features.append(word)
-    # return features
-
-
     #def __init__(self, comment):
         #features = self.preprocessing(comment)
         #featuresets = self.naive_bayes_classification(comment)
         #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
-training = load_gender_with_comments_from_file("gender_and_comments")
-print training[0]
+data_set = load_gender_with_comments_from_file("gender_and_comments")
+print data_set[0]
 #print training[0]
 sentiment_danish = sentiment_danish_words()
-#testing = preprocessing(training[50][0], sentiment_danish)
-#print testing
+preprocessing(data_set[0][0])
 
-feature_set = generate_feature_set(training[0:100], sentiment_danish)
-test, train = naive_bayes_classification(feature_set)
-print test, train
+cleaned_data_set = clean_comments(data_set[0:100])
+
+feature_set = generate_feature_set(cleaned_data_set[0:100], sentiment_danish)
+
 X, y, an, cn = feature_extractor_to_scikitLearn(feature_set[0:100])
+
 X_scaled = standardize_features(X)
-xtest = classification(X_scaled, y, "random_forest")
+trainA, testA, featureImportance = classification(X_scaled, y, "random_forest")
 print an, cn
-print xtest
-#print xtest1
-#pca_plot(X, y, an, cn)
+print trainA, testA, featureImportance
+pca_plot(X, y, an, cn)
 
 
