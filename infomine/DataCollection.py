@@ -96,14 +96,6 @@ def NEW_load(user_inf, gender_name_list):
             firstName = name.split()[0].lower()
             comment = c[1]
             like_ids = c[2].split(",")
-
-            #print like_ids
-            #print type(like_ids[0])
-            #for li in like_ids:
-            #    li = int(li)
-            #    if li in user_inf:
-            #        print user_inf
-            #print user_inf[1]
             like_names = []
             for ui in user_inf:
                 if ui[1] in like_ids:
@@ -111,10 +103,9 @@ def NEW_load(user_inf, gender_name_list):
 
             like_names_comments.append([firstName, comment, like_names])
 
-    #for gnl in gender_name_list:
-    #    if gnl[0] == firstName:
-    #        print ui[0]
-    #
+    data_set = []
+    data_set.append(("Gender", "Comment", "Number_of_male_likes", "Number_of_female_likes", "Total_likes",
+                     "Male_likes_compared_to_Female"))
 
     for lnc in like_names_comments:
         male_count = 0
@@ -123,93 +114,74 @@ def NEW_load(user_inf, gender_name_list):
         male_female_ratio = 0
         for gnl in gender_name_list:
             if gnl[0] in lnc[2]:
-                #if gnl[0] == "Male":
-                #    male_count += 1
-                #elif gnl[0] == "Female":
-                #    female_count += 1
-                #total_likes += 1
-                print gnl[1]
-                #name_list.append(name)
-                #c_data_set.append(comment)
-                #gender_data_set.append(gnl[1])
+                if gnl[1] == "Male":
+                    male_count += 1
+                elif gnl[1] == "Female":
+                    female_count += 1
+                total_likes += 1
+            if gnl[0] == lnc[0]:
+                gender = gnl[1]
 
-    return like_names_comments
+        if total_likes > 0:
+            male_ratio = male_count / total_likes
+        else:
+            male_ratio = 0
+
+        data_set.append((gender, lnc[1].encode("utf-8"), male_count, female_count, total_likes,
+                         male_ratio))
+
+    return data_set
 
 
-def load_comments_from_database_and_combine_with_gender(gender_name_list):
-
-    c_data_set = []
-    gender_data_set = []
-    name_list = []
-
-    cnx = mysql.connector.connect(user='root', password='',
-                          host='127.0.0.1',
-                          database='Information')
-
-    cursor = cnx.cursor()
-    query = ("SELECT u.u_name, c.c_body FROM Information.inf_dtu_user u, Information.inf_dtu_comment c where u.u_uid=c.c_uid")
-    cursor.execute(query)
-
-    for c in cursor:
-        if c[0] != None:
-            name = c[0]
-            comment = c[1].encode("utf-8")
-            firstName = name.split()[0].lower()
-            for gnl in gender_name_list:
-                if gnl[0] == firstName:
-                    name_list.append(name)
-                    c_data_set.append(comment)
-                    gender_data_set.append(gnl[1])
-
-    cursor.close()
-    cnx.close()
-
-    return gender_data_set, c_data_set, name_list
-
-def save_gender_with_comments_to_file(gender_data_set, c_data_set, filename):
+def save_gender_with_comments_to_file(data_set, filename):
 
     data_dir = os.path.join(os.path.dirname(__file__), '../data')
 
-    training_set_file = filename+'.csv'
+    data_set_file = filename+'.csv'
 
-    if not os.path.isfile(training_set_file):
-        with open(os.path.join(data_dir, training_set_file), "w") as out_file:
+    if not os.path.isfile(data_set_file):
+        with open(os.path.join(data_dir, data_set_file), "w") as out_file:
             out_file.write("")
 
-    with open(os.path.join(data_dir, training_set_file), "wb") as f:
-        writer = csv.writer(f)
-        writer.writerows(itertools.izip(gender_data_set, c_data_set))
+    with open(os.path.join(data_dir, data_set_file), "wb") as fp:
+        a = csv.writer(fp, delimiter=',')
+        a.writerows(data_set)
+        #writer = csv.writer(f)
+        #writer.writerows(itertools.izip(gender_data_set, c_data_set))
 
 def load_gender_with_comments_from_file(filename):
 
-    training_set_file = data_helper.get_data_file_path(filename+'.csv')
+    data_set_file = data_helper.get_data_file_path(filename+'.csv')
 
-    trainingSet = []
+    data_set = []
 
     data_dir = os.path.join(os.path.dirname(__file__), '../data')
 
-    with open(os.path.join(data_dir, training_set_file), 'r') as in_file:
+    with open(os.path.join(data_dir, data_set_file), 'r') as in_file:
         for line in csv.reader(in_file):
-            trainingSet.append((line[1], line[0]))
+            data_set.append((line[0].decode("utf-8"), line[1].decode("utf-8"), line[2], line[3], line[4], line[5]))
 
-    return trainingSet
+    return data_set
 
-'''
+
+user_inf = load_firstnames_from_sql_dump()
+print user_inf[0]
 drengenavne, pigenavne, unisexnavne = read_in_danish_names_from_files()
-firstname = load_firstnames_from_sql_dump()
-gender_name_list = find_gender_by_name(firstname, drengenavne, pigenavne, unisexnavne)
-gender_data_set, c_data_set, name_list = load_comments_from_database_and_combine_with_gender(gender_name_list)
-print len(name_list)
-print name_list
-print len(firstname)
-save_gender_with_comments_to_file(gender_data_set,c_data_set,"testing")
-trainingSet = load_gender_with_comments_from_file("testing")
+gender_name_list = find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne)
+
+data_set = NEW_load(user_inf, gender_name_list)
+
+print type(data_set[0][0])
+save_gender_with_comments_to_file(data_set,"testingNew")
+data_set_loaded = load_gender_with_comments_from_file("testingNew")
+print data_set_loaded[0:2]
+print type(data_set[0][0])
 
 cFemale = 0
 cMale = 0
-print trainingSet[0][1]
-for t in trainingSet:
-    if t[1] == "Female":
+print data_set[0][1]
+for t in data_set:
+    if t[0] == "Female":
         cFemale += 1
     else:
         cMale += 1
@@ -222,6 +194,7 @@ print ratio_male_to_female
 print total
 print cFemale, cMale
 
+'''
 cnt = Counter(name_list).items()
 sorted_cnt = sorted(cnt,key=itemgetter(1),reverse=True)
 
@@ -234,18 +207,6 @@ plt.bar(indexes, values, width)
 #plt.xticks(indexes + width * 0.5, labels)
 plt.show()
 '''
-user_inf = load_firstnames_from_sql_dump()
-print user_inf[0]
-drengenavne, pigenavne, unisexnavne = read_in_danish_names_from_files()
-gender_name_list = find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne)
-
-like_names_comments = NEW_load(user_inf, gender_name_list)
-print like_names_comments[1][2]
-
-## likes of comments
-# SELECT *, count(cf.f_uid) As favorites FROM Information.inf_dtu_user u, Information.inf_dtu_comment c,
-#Information.inf_dtu_comment_flag cf
-#where u.u_uid=c.c_uid and c.c_cid= cf.f_cid group by c.c_cid;
 
 # json
 # #with open(gender_and_comments_file, "w") as outfile:

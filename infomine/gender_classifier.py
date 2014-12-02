@@ -26,17 +26,17 @@ from pylab import *
 
 def load_gender_with_comments_from_file(filename):
 
-    training_set_file = data_helper.get_data_file_path(filename+'.csv')
+    data_set_file = data_helper.get_data_file_path(filename+'.csv')
 
-    trainingSet = []
+    data_set = []
 
     data_dir = os.path.join(os.path.dirname(__file__), '../data')
 
-    with open(os.path.join(data_dir, training_set_file), 'r') as in_file:
+    with open(os.path.join(data_dir, data_set_file), 'r') as in_file:
         for line in csv.reader(in_file):
-            trainingSet.append((line[1].decode("utf-8"), line[0]))
+            data_set.append((line[0].decode("utf-8"), line[1].decode("utf-8"), line[2], line[3], line[4], line[5]))
 
-    return trainingSet
+    return data_set
 
 def sentiment_danish_words():
     word = []
@@ -61,10 +61,11 @@ def preprocessing(comment):
 
     clean_words = []
 
-    danish_stem = nltk.stem.snowball.DanishStemmer()
+    #danish_stem = nltk.stem.snowball.DanishStemmer()
     for word in words:
+        #clean_words.append(word.lower())
         if word.lower() not in stopwords.words('danish'):
-            clean_words.append(danish_stem.stem(word.lower()))
+            clean_words.append(word)
 
     cleaned_comment = ""
 
@@ -74,18 +75,18 @@ def preprocessing(comment):
     return cleaned_comment
 
 
-def clean_comments(comments):
+def clean_comments(data_set):
 
-    data_set = []
+    cleaned_data_set = []
 
-    for com in comments:
-        clean_comment = preprocessing(com[0])
-        data_set.append((clean_comment, com[1]))
+    for ds in data_set:
+        clean_comment = preprocessing(ds[1])
+        cleaned_data_set.append((ds[0], clean_comment, ds[2], ds[3], ds[4], ds[5]))
 
-    return data_set
+    return cleaned_data_set
 
 
-def feature_extractor(comment, sentiment):
+def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment):
 
     features = {}
 
@@ -105,10 +106,12 @@ def feature_extractor(comment, sentiment):
     #part_of_speech = nltk.pos_tag(words)
     #print part_of_speech
 
+    ## Word and structural features
     features["number_of_words"] = len(words)
     features["number_of_sentences"] = len(sentences)
     features["lexical_diversity"] = len(comment) / len(set(comment))
 
+    ## Gender features
     features["gender_linked_cues_1"] = len(set(comment).intersection(set(gender_linked_cues_1)))
     features["gender_linked_cues_2"] = len(set(comment).intersection(set(gender_linked_cues_2)))
     features["gender_linked_cues_3"] = len(set(comment).intersection(set(gender_linked_cues_3)))
@@ -132,15 +135,23 @@ def feature_extractor(comment, sentiment):
         max_sent_of_comment = 0
         min_sent_of_comment = 0
 
+    ## Sentiment features
     features["average_sentiment"] = avg_sent_of_comment
     features["minimum_sentiment"] = min_sent_of_comment
     features["maximum_sentiment"] = max_sent_of_comment
 
+    ## Network / like features
+    features["male_likes"] = male_likes
+    features["female_likes"] = female_likes
+    features["total_likes"] = total_likes
+    features["male_likes_compared_to_female_likes"] = male_likes_ratio
+
     return features
 
-def generate_feature_set(training, sentiment):
+def generate_feature_set(data_set, sentiment):
 
-    feature_set = [(feature_extractor(comment, sentiment), gender) for (comment, gender) in training]
+    feature_set = [(feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment),
+                    gender) for (gender, comment, male_likes, female_likes, total_likes, male_likes_ratio) in data_set]
 
     return feature_set
 
@@ -166,8 +177,14 @@ def feature_extractor_to_scikitLearn(featureset):
         glc5 = float(features[0]["gender_linked_cues_5"])
         glc6 = float(features[0]["gender_linked_cues_6"])
         glc7 = float(features[0]["gender_linked_cues_7"])
+        ml = float(features[0]["male_likes"])
+        fl = float(features[0]["female_likes"])
+        tl = float(features[0]["total_likes"])
+        mlcfl = float(features[0]["male_likes_compared_to_female_likes"])
 
-        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, glc1, glc2, glc3, glc4, glc5, glc6, glc7])
+        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, glc1, glc2, glc3, glc4, glc5,
+                            glc6, glc7, ml, fl, tl, mlcfl])
+
         if features[1] == "Female":
             label.append([1])
         else:
@@ -211,8 +228,8 @@ def classification(Xfeatures, Ylabel, algorithm):
     ## Crossvalidation
     # Create crossvalidation partition for evaluation
     K = 5
-    cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
-    #cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
+    #cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
+    cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
 
     # Initialize variables
     test_accuracy = np.empty((K,1))
@@ -303,22 +320,23 @@ def pca_plot(X, y, attributes_names, class_names):
         #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
-data_set = load_gender_with_comments_from_file("gender_and_comments")
+data_set = load_gender_with_comments_from_file("testingNew")
 print data_set[0]
-#print training[0]
+print data_set[2]
+
 sentiment_danish = sentiment_danish_words()
 preprocessing(data_set[0][0])
 
-cleaned_data_set = clean_comments(data_set[0:100])
+cleaned_data_set = clean_comments(data_set[1:1001])
+print cleaned_data_set[2]
+feature_set = generate_feature_set(cleaned_data_set[0:1000], sentiment_danish)
 
-feature_set = generate_feature_set(cleaned_data_set[0:100], sentiment_danish)
-
-X, y, an, cn = feature_extractor_to_scikitLearn(feature_set[0:100])
+X, y, an, cn = feature_extractor_to_scikitLearn(feature_set[0:1000])
 
 X_scaled = standardize_features(X)
 trainA, testA, featureImportance = classification(X_scaled, y, "random_forest")
 print an, cn
 print trainA, testA, featureImportance
-pca_plot(X, y, an, cn)
+#pca_plot(X, y, an, cn)
 
 
