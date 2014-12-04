@@ -29,6 +29,32 @@ class Comment(object):
     def author(self, value):
         self._author = value
 
+    @property
+    def male_likes(self):
+        return self._male_likes
+
+    @male_likes.setter
+    def male_likes(self, value):
+        self._male_likes = value
+
+    @property
+    def female_likes(self):
+        return self._female_likes
+
+    @female_likes.setter
+    def female_likes(self, value):
+        self._female_likes = value
+
+    @property
+    def likes(self):
+        """ Returns the calculated sum of male and female likes """
+        return sum(self._male_likes, self._female_likes)
+
+    @property
+    def like_ratio(self):
+        """ Returns the male/female like ratio """
+        return 0.0
+
     def __str__(self):
         return '%s' % self._comment
 

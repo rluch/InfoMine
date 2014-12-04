@@ -4,6 +4,7 @@
 data_helper.py
 """
 import os
+import csv
 
 
 def get_data_file_path(filename):
@@ -14,3 +15,16 @@ def get_data_file_path(filename):
     data_dir = os.path.join(os.path.dirname(__file__), '../data')
     absolute_path = os.path.abspath(os.path.join(data_dir, filename))
     return absolute_path
+
+
+def load_and_return_lines_from_csv_file(filename):
+    """
+    Generic methos for loading and returning lines of any file
+    """
+    data_file = get_data_file_path(filename)
+    data_dir = os.path.join(os.path.dirname(__file__), '../data')
+    lines = []
+    with open(os.path.join(data_dir, data_file), 'r') as in_file:
+        for line in csv.reader(in_file):
+            lines.append(line)
+    return lines

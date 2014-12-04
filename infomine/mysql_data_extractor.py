@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
-try:
-    import mysql.connector
-except ImportError, e:
-    raise e
-else:
-    print("Not able to load data from MySQL.")
-
+import mysql.connector
 
 class MySQLDataExtractor(object):
-    def load_firstnames_from_sql_dump():
+    def __init__(self):
+        self.conn = mysql.connector.connect(user='root', password='',
+                              host='127.0.0.1',
+                              database='Information')        
+
+    def establish_new_mysql_connection(self):
+        return mysql.connector.connect(user='root', password='',
+                              host='127.0.0.1',
+                              database='Information')
+    def save_as_json(self):
+        """ Saving extracted data as a JSON-file for future easy parsing """
+
+    def load_firstnames_from_mysql(self):
 
         user_inf = []
 
-        cnx = mysql.connector.connect(user='root', password='',
-                              host='127.0.0.1',
-                              database='Information')
+        cnx = self.establish_new_mysql_connection()
 
         cursor = cnx.cursor()
         query = ("SELECT u_name, u_uid FROM Information.inf_dtu_user")
@@ -31,7 +35,7 @@ class MySQLDataExtractor(object):
         return user_inf
 
 
-    def load_comments_and_gender_and_comment_likes_from_sql_dump(user_inf, gender_name_list):
+    def load_comments_and_gender_and_comment_likes_from_mysql(self, user_inf, gender_name_list):
 
         cnx = mysql.connector.connect(user='root', password='',
                               host='127.0.0.1',
@@ -87,3 +91,8 @@ class MySQLDataExtractor(object):
                              male_ratio))
 
         return data_set
+
+
+
+m = MySQLDataExtractor()
+print m.load_firstnames_from_sql_dump(m.load_firstnames_from_mysql())
