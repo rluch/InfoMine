@@ -63,9 +63,9 @@ def preprocessing(comment):
 
     #danish_stem = nltk.stem.snowball.DanishStemmer()
     for word in words:
-        #clean_words.append(word.lower())
-        if word.lower() not in stopwords.words('danish'):
-            clean_words.append(word)
+        clean_words.append(word.lower())
+        #if word.lower() not in stopwords.words('danish'):
+        #     clean_words.append(word)
 
     cleaned_comment = ""
 
@@ -89,7 +89,16 @@ def clean_comments(data_set):
 def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment):
 
     features = {}
-    """
+
+    words = nltk.word_tokenize(comment)
+    sentences = nltk.sent_tokenize(comment)
+
+    ## Kendeord / Article Words
+    article_words = ["den".decode("utf-8"), "det".decode("utf-8") , "de".decode("utf-8"), "en".decode("utf-8"), "et".decode("utf-8")]
+
+    ## Pro sentence words
+    pro_sentence_words = ["ja".decode("utf-8"), "nej".decode("utf-8"), "ok".decode("utf-8"), "okay".decode("utf-8"), "jamen".decode("utf-8")]
+
     gender_linked_cues_1 = ["yndig".decode("utf-8"), "charmerende".decode("utf-8"), "sød".decode("utf-8"),
                             "dejlig".decode("utf-8"), "guddommelig".decode("utf-8")]
     gender_linked_cues_2 = ["herregud".decode("utf-8"), "hey".decode("utf-8"), "ah".decode("utf-8"), "okay".decode("utf-8")]
@@ -100,24 +109,29 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
                             "ganske".decode("utf-8"), "særligt".decode("utf-8")]
     gender_linked_cues_6 = ["distraherende".decode("utf-8"), "irriterende".decode("utf-8"), "rar".decode("utf-8")]
     gender_linked_cues_7 = ["undrer".decode("utf-8"), "overveje".decode("utf-8"), "formoder".decode("utf-8"), "antager".decode("utf-8")]
-    """
-    words = nltk.word_tokenize(comment)
-    sentences = nltk.sent_tokenize(comment)
 
-    ## Word and structural features
+
+    ## Word, character and structural features
     features["number_of_words"] = len(words)
     features["number_of_sentences"] = len(sentences)
     features["lexical_diversity"] = len(comment) / len(set(comment))
-    """
+    features["number_of_characters"] = len(comment)
+    features["average_length_per_word"] = len(comment)/len(words)
+    features["average_length_per_sentence"] = len(comment)/len(sentences)
+
+    ## Function words
+    features["article_words"] = len(set(words).intersection(set(article_words)))
+    features["pro_sentence_words"] = len(set(words).intersection(set(pro_sentence_words)))
+
     ## Gender features
-    features["gender_linked_cues_1"] = len(set(comment).intersection(set(gender_linked_cues_1)))
-    features["gender_linked_cues_2"] = len(set(comment).intersection(set(gender_linked_cues_2)))
-    features["gender_linked_cues_3"] = len(set(comment).intersection(set(gender_linked_cues_3)))
-    features["gender_linked_cues_4"] = len(set(comment).intersection(set(gender_linked_cues_4)))
-    features["gender_linked_cues_5"] = len(set(comment).intersection(set(gender_linked_cues_5)))
-    features["gender_linked_cues_6"] = len(set(comment).intersection(set(gender_linked_cues_6)))
-    features["gender_linked_cues_7"] = len(set(comment).intersection(set(gender_linked_cues_7)))
-    """
+    features["gender_linked_cues_1"] = len(set(words).intersection(set(gender_linked_cues_1)))
+    features["gender_linked_cues_2"] = len(set(words).intersection(set(gender_linked_cues_2)))
+    features["gender_linked_cues_3"] = len(set(words).intersection(set(gender_linked_cues_3)))
+    features["gender_linked_cues_4"] = len(set(words).intersection(set(gender_linked_cues_4)))
+    features["gender_linked_cues_5"] = len(set(words).intersection(set(gender_linked_cues_5)))
+    features["gender_linked_cues_6"] = len(set(words).intersection(set(gender_linked_cues_6)))
+    features["gender_linked_cues_7"] = len(set(words).intersection(set(gender_linked_cues_7)))
+
     # check if word appears in the dictionary created earlier.
 
     sentValue = []
@@ -126,7 +140,6 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
             sentValue.append(int(value))
     if len(sentValue) > 0:
         avg_sent_of_comment = sum(sentValue)/len(sentValue)
-        #abs_sent_of_comment = max(abs(i) for i in sentValue)
         min_sent_of_comment = min(sentValue)
         max_sent_of_comment = max(sentValue)
     else:
@@ -165,23 +178,29 @@ def feature_extractor_to_scikitLearn(featureset):
 
         now = float(features[0]["number_of_words"])
         nos = float(features[0]["number_of_sentences"])
+        noc = float(features[0]["number_of_characters"])
+        alw = float(features[0]["average_length_per_word"])
+        als = float(features[0]["average_length_per_sentence"])
+        aw = float(features[0]["article_words"])
+        psw = float(features[0]["pro_sentence_words"])
+        glc1 = float(features[0]["gender_linked_cues_1"])
+        glc2 = float(features[0]["gender_linked_cues_2"])
+        glc3 = float(features[0]["gender_linked_cues_3"])
+        glc4 = float(features[0]["gender_linked_cues_4"])
+        glc5 = float(features[0]["gender_linked_cues_5"])
+        glc6 = float(features[0]["gender_linked_cues_6"])
+        glc7 = float(features[0]["gender_linked_cues_7"])
         lex_div = float(features[0]["lexical_diversity"])
         avg_sen = float(features[0]["average_sentiment"])
         max_sen = float(features[0]["maximum_sentiment"])
         min_sen = float(features[0]["minimum_sentiment"])
-        #glc1 = float(features[0]["gender_linked_cues_1"])
-        #glc2 = float(features[0]["gender_linked_cues_2"])
-        #glc3 = float(features[0]["gender_linked_cues_3"])
-        #glc4 = float(features[0]["gender_linked_cues_4"])
-        #glc5 = float(features[0]["gender_linked_cues_5"])
-        #glc6 = float(features[0]["gender_linked_cues_6"])
-        #glc7 = float(features[0]["gender_linked_cues_7"])
         ml = float(features[0]["male_likes"])
         fl = float(features[0]["female_likes"])
         tl = float(features[0]["total_likes"])
         mlcfl = float(features[0]["male_female_likes_ratio"])
 
-        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, ml, fl, tl, mlcfl])
+        feature_set.append([now, nos, noc, alw, als, aw, psw, glc1, glc2, glc3, glc4, glc5, glc6, glc7, lex_div,
+                            avg_sen, max_sen, min_sen, ml, fl, tl, mlcfl])
 
         if features[1] == "Female":
             label.append([1])
@@ -192,8 +211,13 @@ def feature_extractor_to_scikitLearn(featureset):
 
     y = np.array(label)
 
-    attributes_names = ["number_of_words", "number_of_sentences", "lexical_diversity", "average_sentiment", "maximum_sentiment", "minimum_sentiment",
-                        "male_likes", "female_likes", "total_likes", "male_female_likes_ratio"]
+    attributes_names = ["number_of_words", "number_of_sentences", "number_of_characters", "average length per word",
+                        "average length per sentence", "article_words", "pro_sentence_words", "gender_linked_cues_1",
+                        "gender_linked_cues_2", "gender_linked_cues_3", "gender_linked_cues_4", "gender_linked_cues_5",
+                        "gender_linked_cues_6", "gender_linked_cues_7", "lexical_diversity", "average_sentiment",
+                        "maximum_sentiment", "minimum_sentiment", "male_likes", "female_likes", "total_likes",
+                        "male_female_likes_ratio"]
+
     class_names = ["Male", "Female"]
 
     return array_list, y, attributes_names, class_names
@@ -271,62 +295,24 @@ def classification(Xfeatures, Ylabel, algorithm):
 
     return train_accuracy, test_accuracy, overall_feature_importance, cm
 
-def pca_plot(X, y, attributes_names, class_names):
-
-    # Compute values of N, M and C.
-    N = len(y)
-    M = len(an)
-    C = len(cn)
-
-    # Subtract mean value from data
-    Y = X - np.ones((N, 1))*X.mean(0)
-
-    # PCA by computing SVD of Y
-    U,S,V = linalg.svd(Y,full_matrices=False)
-    V = mat(V).T
-
-    # Project the centered data onto principal component space
-    Z = Y * V
-
-    # Indices of the principal components to be plotted
-    i = 0
-    j = 1
-
-    # Plot PCA of the data
-    f = figure()
-    f.hold()
-    title('Information data')
-    for c in range(C):
-        # select indices belonging to class c:
-        class_mask = y.ravel()==c
-        plot(Z[class_mask,i], Z[class_mask,j], 'o')
-    legend(cn)
-    xlabel('PC{0}'.format(i+1))
-    ylabel('PC{0}'.format(j+1))
-
-    # Output result to screen
-    show()
-
-    return f
-
     #def __init__(self, comment):
         #features = self.preprocessing(comment)
         #featuresets = self.naive_bayes_classification(comment)
         #featuresets = self.naive_bayes_classification(comment)
         #print featuresets
 
-data_set = load_gender_with_comments_from_file("testingNew")
+data_set = load_gender_with_comments_from_file("ModifiedDataSet")
 print data_set[0]
 print data_set[2]
 
 sentiment_danish = sentiment_danish_words()
 preprocessing(data_set[0][0])
 
-cleaned_data_set = clean_comments(data_set[1:1001])
+cleaned_data_set = clean_comments(data_set[0:100])
 print cleaned_data_set[2]
-feature_set = generate_feature_set(cleaned_data_set[0:1000], sentiment_danish)
+feature_set = generate_feature_set(cleaned_data_set, sentiment_danish)
 print feature_set[0]
-X, y, an, cn = feature_extractor_to_scikitLearn(feature_set[0:1000])
+X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
 
 X = standardize_features(X)
 trainAcAB, testAcAB, featureImportanceAB, cmAB = classification(X, y, "ada_boost")
