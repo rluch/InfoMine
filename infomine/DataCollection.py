@@ -11,6 +11,7 @@ from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
 from operator import itemgetter
+import random
 
 
 def read_in_danish_names_from_files():
@@ -78,7 +79,7 @@ def find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne):
 
     return gender_name_list
 
-def NEW_load(user_inf, gender_name_list):
+def load_comments_and_gender_and_comment_likes_from_sql_dump(user_inf, gender_name_list):
 
     cnx = mysql.connector.connect(user='root', password='',
                           host='127.0.0.1',
@@ -89,6 +90,7 @@ def NEW_load(user_inf, gender_name_list):
              "Information.inf_dtu_comment_flag cf where u.u_uid=c.c_uid and c.c_cid = f_cid group by c.c_cid;")
     cursor.execute(query)
 
+    # Makes a list that for each row contains name, comments and name of the persons who liked the comment
     like_names_comments = []
     for c in cursor:
         if c[0] != None:
@@ -107,6 +109,8 @@ def NEW_load(user_inf, gender_name_list):
     data_set.append(("Gender", "Comment", "Number_of_male_likes", "Number_of_female_likes", "Total_likes",
                      "Male_likes_compared_to_Female"))
 
+    # Determines if the commenter is a male or female and determines what gender the comment likes are
+    # Count the number of male, female and total comment likes
     for lnc in like_names_comments:
         male_count = 0
         female_count = 0
@@ -164,35 +168,77 @@ def load_gender_with_comments_from_file(filename):
     return data_set
 
 
+def remove_male_samples_from_data_set(data_set):
+
+    # Remove column names and sorts the list
+    data_set_sorted = sorted(data_set[1:])
+
+    # Extract all female and male to a seperat list
+    data_set_female = data_set_sorted[:1130]
+    data_set_male = data_set_sorted[1130:]
+
+    # Random remove some of the male samples
+    random.shuffle(data_set_male)
+    data_set_male = data_set_male[:1370]
+
+    # Merge the new male list and female list and shuffle
+    new_data_set = data_set_female + data_set_male
+    random.shuffle(new_data_set)
+
+    return new_data_set
+
+def count_number_of_male_and_female_comments(data_set):
+
+    cFemale = 0
+    cMale = 0
+    sum_male_likes = 0
+    sum_female_likes = 0
+    sum_total_likes = 0
+
+    print data_set[0]
+    for t in data_set:
+        if t[0] == "Female":
+            cFemale += 1
+            sum_female_likes += int(t[3])
+        else:
+            cMale += 1
+            sum_male_likes += int(t[2])
+
+        sum_total_likes += int(t[4])
+
+    total = cFemale + cMale
+    procent_male = cMale/total
+    procent_female = cFemale/total
+    print "Procent male: %s" %procent_male
+    print "Procent female: %s" %procent_female
+    print "Total comments: %s" %total
+    print "Male comments: %s" %cFemale
+    print "Female comments: %s" %cMale
+
+    avg_male_likes = sum_male_likes/cMale
+    avg_female_likes = sum_female_likes/cFemale
+    avg_total_likes = sum_total_likes/total
+    print "average male likes pr comment: %s" %avg_male_likes
+    print "average female likes pr comment: %s" %avg_female_likes
+    print "average total likes pr comment: %s" %avg_total_likes
+
+    return None
+
+
 user_inf = load_firstnames_from_sql_dump()
-print user_inf[0]
+
 drengenavne, pigenavne, unisexnavne = read_in_danish_names_from_files()
 gender_name_list = find_gender_by_name(user_inf, drengenavne, pigenavne, unisexnavne)
 
-data_set = NEW_load(user_inf, gender_name_list)
+data_set = load_comments_and_gender_and_comment_likes_from_sql_dump(user_inf, gender_name_list)
 
-print type(data_set[0][0])
+data_set = remove_male_samples_from_data_set(data_set)
+
+print data_set[1]
 save_gender_with_comments_to_file(data_set,"testingNew")
 data_set_loaded = load_gender_with_comments_from_file("testingNew")
-print data_set_loaded[0:2]
-print type(data_set[0][0])
 
-cFemale = 0
-cMale = 0
-print data_set[0][1]
-for t in data_set:
-    if t[0] == "Female":
-        cFemale += 1
-    else:
-        cMale += 1
-
-total = cFemale + cMale
-ratio_male_to_female = cMale/total
-ratio_male_to_female_1 = cFemale/total
-print ratio_male_to_female_1
-print ratio_male_to_female
-print total
-print cFemale, cMale
+count_number_of_male_and_female_comments(data_set)
 
 '''
 cnt = Counter(name_list).items()
@@ -208,10 +254,5 @@ plt.bar(indexes, values, width)
 plt.show()
 '''
 
-# json
-# #with open(gender_and_comments_file, "w") as outfile:
-# #    for re in zip(c_data_set,gender_data_set):
-# #        json.dump({'gender':re[1], 'comment':re[0], }, outfile, indent=2)
-#
 
 

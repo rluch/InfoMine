@@ -89,7 +89,7 @@ def clean_comments(data_set):
 def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment):
 
     features = {}
-
+    """
     gender_linked_cues_1 = ["yndig".decode("utf-8"), "charmerende".decode("utf-8"), "sød".decode("utf-8"),
                             "dejlig".decode("utf-8"), "guddommelig".decode("utf-8")]
     gender_linked_cues_2 = ["herregud".decode("utf-8"), "hey".decode("utf-8"), "ah".decode("utf-8"), "okay".decode("utf-8")]
@@ -100,17 +100,15 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
                             "ganske".decode("utf-8"), "særligt".decode("utf-8")]
     gender_linked_cues_6 = ["distraherende".decode("utf-8"), "irriterende".decode("utf-8"), "rar".decode("utf-8")]
     gender_linked_cues_7 = ["undrer".decode("utf-8"), "overveje".decode("utf-8"), "formoder".decode("utf-8"), "antager".decode("utf-8")]
-
+    """
     words = nltk.word_tokenize(comment)
     sentences = nltk.sent_tokenize(comment)
-    #part_of_speech = nltk.pos_tag(words)
-    #print part_of_speech
 
     ## Word and structural features
     features["number_of_words"] = len(words)
     features["number_of_sentences"] = len(sentences)
     features["lexical_diversity"] = len(comment) / len(set(comment))
-
+    """
     ## Gender features
     features["gender_linked_cues_1"] = len(set(comment).intersection(set(gender_linked_cues_1)))
     features["gender_linked_cues_2"] = len(set(comment).intersection(set(gender_linked_cues_2)))
@@ -119,6 +117,7 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     features["gender_linked_cues_5"] = len(set(comment).intersection(set(gender_linked_cues_5)))
     features["gender_linked_cues_6"] = len(set(comment).intersection(set(gender_linked_cues_6)))
     features["gender_linked_cues_7"] = len(set(comment).intersection(set(gender_linked_cues_7)))
+    """
     # check if word appears in the dictionary created earlier.
 
     sentValue = []
@@ -144,7 +143,7 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     features["male_likes"] = male_likes
     features["female_likes"] = female_likes
     features["total_likes"] = total_likes
-    features["male_likes_compared_to_female_likes"] = male_likes_ratio
+    features["male_female_likes_ratio"] = male_likes_ratio
 
     return features
 
@@ -170,20 +169,19 @@ def feature_extractor_to_scikitLearn(featureset):
         avg_sen = float(features[0]["average_sentiment"])
         max_sen = float(features[0]["maximum_sentiment"])
         min_sen = float(features[0]["minimum_sentiment"])
-        glc1 = float(features[0]["gender_linked_cues_1"])
-        glc2 = float(features[0]["gender_linked_cues_2"])
-        glc3 = float(features[0]["gender_linked_cues_3"])
-        glc4 = float(features[0]["gender_linked_cues_4"])
-        glc5 = float(features[0]["gender_linked_cues_5"])
-        glc6 = float(features[0]["gender_linked_cues_6"])
-        glc7 = float(features[0]["gender_linked_cues_7"])
+        #glc1 = float(features[0]["gender_linked_cues_1"])
+        #glc2 = float(features[0]["gender_linked_cues_2"])
+        #glc3 = float(features[0]["gender_linked_cues_3"])
+        #glc4 = float(features[0]["gender_linked_cues_4"])
+        #glc5 = float(features[0]["gender_linked_cues_5"])
+        #glc6 = float(features[0]["gender_linked_cues_6"])
+        #glc7 = float(features[0]["gender_linked_cues_7"])
         ml = float(features[0]["male_likes"])
         fl = float(features[0]["female_likes"])
         tl = float(features[0]["total_likes"])
-        mlcfl = float(features[0]["male_likes_compared_to_female_likes"])
+        mlcfl = float(features[0]["male_female_likes_ratio"])
 
-        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, glc1, glc2, glc3, glc4, glc5,
-                            glc6, glc7, ml, fl, tl, mlcfl])
+        feature_set.append([now, nos, lex_div, avg_sen, max_sen, min_sen, ml, fl, tl, mlcfl])
 
         if features[1] == "Female":
             label.append([1])
@@ -194,7 +192,8 @@ def feature_extractor_to_scikitLearn(featureset):
 
     y = np.array(label)
 
-    attributes_names = ["number_of_words", "number_of_sentences", "average_sentiment"]
+    attributes_names = ["number_of_words", "number_of_sentences", "lexical_diversity", "average_sentiment", "maximum_sentiment", "minimum_sentiment",
+                        "male_likes", "female_likes", "total_likes", "male_female_likes_ratio"]
     class_names = ["Male", "Female"]
 
     return array_list, y, attributes_names, class_names
@@ -221,14 +220,10 @@ def classification(Xfeatures, Ylabel, algorithm):
 
     X = Xfeatures
     y = Ylabel
-    #print X, y
     N, M = X.shape
-    #print type(X), type(y)
 
-    ## Crossvalidation
-    # Create crossvalidation partition for evaluation
+    # Crossvalidation
     K = 5
-    #cv = cross_validation.KFold(N, n_folds=K,shuffle=True)
     cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
 
     # Initialize variables
@@ -245,7 +240,7 @@ def classification(Xfeatures, Ylabel, algorithm):
         X_test = X[test_index,:]
         y_test = y[test_index,:]
 
-        # Fit and evaluate Logistic Regression classifier
+        # Fit the different classifiers
         if algorithm == "svm":
             clf = svm.SVC()
         elif algorithm == "random_forest":
@@ -255,26 +250,26 @@ def classification(Xfeatures, Ylabel, algorithm):
         elif algorithm == "ada_boost":
             clf = ensemble.AdaBoostClassifier()
 
+        # evaluate the different classifiers
         clf.fit(X_train, y_train.ravel())
         y_est = clf.predict(X_test)
         test_accuracy[k] = sklearn.metrics.accuracy_score(y_test, y_est)
         train_accuracy[k] = clf.score(X_train, y_train.ravel())
-        print sklearn.metrics.confusion_matrix(y_test, y_est)
 
+        # Extract feature importances if possible
         if algorithm in ["random_forest", "ada_boost"]:
             feature_importance[k] = clf.feature_importances_
         k += 1
 
-
-    overall_test_accuracy = sum(test_accuracy)/len(test_accuracy)
-    overall_train_accuracy = sum(train_accuracy)/len(train_accuracy)
+    # Confusion Matrix
+    cm = sklearn.metrics.confusion_matrix(y_test, y_est)
 
     if algorithm == "random_forest" or "ada_boost":
         overall_feature_importance = feature_importance.sum(axis=0)/len(feature_importance)
     else:
         overall_feature_importance = None
 
-    return overall_train_accuracy, overall_test_accuracy, overall_feature_importance
+    return train_accuracy, test_accuracy, overall_feature_importance, cm
 
 def pca_plot(X, y, attributes_names, class_names):
 
@@ -330,13 +325,17 @@ preprocessing(data_set[0][0])
 cleaned_data_set = clean_comments(data_set[1:1001])
 print cleaned_data_set[2]
 feature_set = generate_feature_set(cleaned_data_set[0:1000], sentiment_danish)
-
+print feature_set[0]
 X, y, an, cn = feature_extractor_to_scikitLearn(feature_set[0:1000])
 
-X_scaled = standardize_features(X)
-trainA, testA, featureImportance = classification(X_scaled, y, "random_forest")
+X = standardize_features(X)
+trainAcAB, testAcAB, featureImportanceAB, cmAB = classification(X, y, "ada_boost")
+trainAcRD, testAcRF, featureImportanceRF, cmRF = classification(X, y, "random_forest")
+trainAcSVM, testAcSVM, featureImportance, cmSVM = classification(X, y, "svm")
+trainAcLR, testAcLR, featureImportance, cmLR = classification(X, y, "logistic_regression")
+
 print an, cn
-print trainA, testA, featureImportance
+print trainAcAB, testAcAB, featureImportanceAB, cmAB
 #pca_plot(X, y, an, cn)
 
 
