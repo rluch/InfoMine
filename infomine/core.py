@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Converting Roman numerals to Arabic ones.
-
-Examples
---------
->>> Roman('V')
-5
->>> Roman('X') + 3
-13
-
+"""
+Author gender identification with machine learning.
 """
 __version__ = '0.1.0'
 __author__ = 'Henrik Holm, Rasmus Lundsgaard'
 __author_email__ = 's103214@student.dtu.dk, s123344@student.dtu.dk'
 
+from comment import Comment
 
-_numerals = {'I': 1, 'V': 5, 'X': 10}
 
+class InfoMiner(object):
+    """InfoMiner core launcher module"""
+    def __init__(_class, args):
+        """
+        InfoMiner Constructor.
+        Parses and acts on supplied docopts
+        """
+        print(_class.parse_opts(args))
 
-class InfoMiner(int):
-
-    """Roman numeral."""
-
-    def __new__(class_, roman):
-        """Construct new Roman numeral from string `roman`."""
-        try:
-            return sum(_numerals[digit] for digit in roman)
-        except KeyError:
-            raise ValueError('Invalid Roman numeral: %r' % roman)
+    def parse_opts(self, args):
+        """
+        Acts on parsed CLI parameters.
+        """
+        if(args['<comment>']):
+            print(args['<comment>'])
+            return Comment(args['<comment>'])
+        elif(args['<comments_file>']):
+            print "comments file"
