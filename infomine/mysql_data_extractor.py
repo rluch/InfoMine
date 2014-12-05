@@ -24,11 +24,11 @@ class MySQLDataExtractor(object):
         Saving/overwrite extracted comment objects serialized
         in a pickle-file for easy loading.
         """
-        filepath = get_data_file_path(filename)
+        path = get_data_file_path(filename)
         pickle.dump(
             self.comments,
-            open(filepath, 'wb'))
-        print("[INFO] Saved %d comments to %s" %(len(self.comments), filepath))
+            open(path, 'wb'))
+        print("[INFO] Saved %d comments to %s" % (len(self.comments), path))
 
     def load_firstnames_from_mysql(self):
         cnx = self.establish_new_mysql_connection()

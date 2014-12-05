@@ -7,6 +7,7 @@ import os
 import sys
 import csv
 import pickle
+import random
 
 
 def get_data_file_path(filename):
@@ -41,4 +42,27 @@ def load_serialized_comments_from_file(filename):
         print "[ERROR] Comments could not loaded!"
         print "\tRun infominer with \"--mysql\" to extract from mysql.\n"
         sys.exit(e)
+    return comments
+
+
+def gender_ratio_normalize_comments(_comments):
+    """
+    Prepare for training. Discard unknown gender and
+    ensure the same amount of male and female samples
+    """
+    comments = sorted(_comments, key=lambda comment: comment.gender)
+    comments_male = []
+    comments_female = []
+    for c in comments:
+        if c.gender == "male":
+            comments_male.append(c)
+        elif c.gender == "female":
+            comments_female.append(c)
+    male_diff = len(comments_male) - len(comments_female)
+    print "Removing %d males from sampleset" % male_diff
+    random.shuffle(comments_male)
+    comments_male = comments_male[:len(comments_female)]
+
+    comments = comments_male + comments_female
+    random.shuffle(comments)
     return comments
