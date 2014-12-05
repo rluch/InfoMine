@@ -59,7 +59,6 @@ def gender_ratio_normalize_comments(_comments):
         elif c.gender == "female":
             comments_female.append(c)
     male_diff = len(comments_male) - len(comments_female)
-    print "Removing %d males from sampleset" % male_diff
     random.shuffle(comments_male)
     comments_male = comments_male[:len(comments_female)]
 

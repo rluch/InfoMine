@@ -24,42 +24,9 @@ import time
 from nltk.util import tokenwrap
 from data_helper import load_afinndk_sentiment_file_to_dict, load_serialized_comments_from_file
 
-
-def load_gender_with_comments_from_file(filename):
-
-    data_set_file = data_helper.get_data_file_path(filename+'.csv')
-
-    data_set = []
-
-    data_dir = os.path.join(os.path.dirname(__file__), '../data')
-
-    with open(os.path.join(data_dir, data_set_file), 'r') as in_file:
-        for line in csv.reader(in_file):
-            data_set.append((line[0].decode("utf-8"), line[1].decode("utf-8"), line[2], line[3], line[4], line[5]))
-
-    return data_set
-
-
-def sentiment_danish_words():
-    word = []
-    sentScore = []
-    data_dir = os.path.join(os.path.dirname(__file__), '../data')
-    
-    # Pair each wood with its average sentiment
-    with open(os.path.join(data_dir, 'Nielsen2011Sentiment_afinndk-2.txt'), 'r') as in_file:
-        for line in in_file.readlines()[0:]:
-            word.append(line.split('\t')[0].decode("utf-8"))  # Each column in the file is tab seperated
-            tab_split = line.split('\t')[1]
-            newline_split = tab_split.split('\n')[0]
-            sentScore.append(newline_split)
-
-    sentiment = dict(zip(word, sentScore))
-
-    return sentiment
-
+sentiment_danish = None
 
 def preprocessing(comment):
-
     words = nltk.word_tokenize(comment)
     clean_words = [word.lower() for word in words if word.lower() not in stopwords.words('danish')]
     cleaned_comment = tokenwrap(clean_words)
@@ -68,7 +35,6 @@ def preprocessing(comment):
 
 
 def clean_comments(data_set):
-
     cleaned_data_set = []
     for ds in data_set:
         #clean_comment = preprocessing(ds[1])
@@ -294,38 +260,37 @@ def classification(Xfeatures, Ylabel, algorithm):
 
     return train_accuracy, test_accuracy, overall_feature_importance, cm, clf
 
+def train_classifier():
+    comments = load_serialized_comments_from_file('comments.p')
+    comments = data_helper.gender_ratio_normalize_comments(comments)
+    sentiment_danish = load_afinndk_sentiment_file_to_dict()
+    comments = clean_comments(comments)
 
-data_set = load_gender_with_comments_from_file("ModifiedDataSet")
-comments = load_serialized_comments_from_file('comments.p')
-comments = data_helper.gender_ratio_normalize_comments(comments)
-print len(comments)
+    #feature_set = generate_feature_set(cleaned_data_set, sentiment_danish)
+    feature_set = generate_feature_set(comments, sentiment_danish)
 
-sentiment_danish = sentiment_danish_words()
-sentiment_danish = load_afinndk_sentiment_file_to_dict()
+    X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
+    X = standardize_features(X)
 
-#cleaned_data_set = clean_comments(data_set[0:100])
-comments = clean_comments(comments)
+    trainAcAB, testAcAB, featureImportanceAB, cmAB, modelAB = classification(X, y, "ada_boost")
+    trainAcRD, testAcRF, featureImportanceRF, cmRF, modelRF = classification(X, y, "random_forest")
 
-#feature_set = generate_feature_set(cleaned_data_set, sentiment_danish)
-feature_set = 0
-feature_set = generate_feature_set(comments, sentiment_danish)
-print feature_set[0]
+    trainAcSVM, testAcSVM, featureImportance, cmSVM, modelSVM = classification(X, y, "svm")
+    trainAcLR, testAcLR, featureImportance, cmLR, modelLR = classification(X, y, "logistic_regression")
 
-X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
-print X[0]
-print y
-X = standardize_features(X)
+    #print an, cn
+    #print trainAcAB, testAcAB, featureImportanceAB, cmAB
+    #pca_plot(X, y, an, cn)
 
-trainAcAB, testAcAB, featureImportanceAB, cmAB, model = classification(X, y, "ada_boost")
-trainAcRD, testAcRF, featureImportanceRF, cmRF, model = classification(X, y, "random_forest")
+    #print model.predict(X[0])
+    return [modelAB, modelRF, modelSVM, modelLR],  sentiment_danish
 
-trainAcSVM, testAcSVM, featureImportance, cmSVM, model = classification(X, y, "svm")
-trainAcLR, testAcLR, featureImportance, cmLR, model = classification(X, y, "logistic_regression")
+def classify(comment, model, sentiment):
+    comments = clean_comments([comment])
+    feature_set = generate_feature_set(comments, sentiment)
 
-print an, cn
-print trainAcAB, testAcAB, featureImportanceAB, cmAB
-#pca_plot(X, y, an, cn)
-
-
-print model.predict(X[0])
+    X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
+    X = standardize_features(X)
+    prediction_val = model.predict(X[0])
+    return prediction_val
 

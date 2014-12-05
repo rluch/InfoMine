@@ -12,6 +12,8 @@ class Comment(object):
         self._comment = comment_string
         self._author = None
         self._gender = None
+        self._male_likes = 0
+        self._female_likes = 0
 
     @property
     def comment(self):
@@ -28,6 +30,14 @@ class Comment(object):
     @author.setter
     def author(self, value):
         self._author = value
+
+    @property
+    def gender(self):
+        return self._gender
+
+    @gender.setter
+    def gender(self, value):
+        self._gender = value
 
     @property
     def male_likes(self):
