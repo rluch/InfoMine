@@ -7,7 +7,6 @@ __author__ = 'Henrik Holm, Rasmus Lundsgaard'
 __author_email__ = 's103214@student.dtu.dk, s123344@student.dtu.dk'
 
 from comment import Comment
-from data_helper import load_and_return_lines_from_csv_file
 from data_helper import load_serialized_comments_from_file
 
 
@@ -33,14 +32,15 @@ class InfoMiner(object):
             m.load_comments_and_gender_and_comment_likes_from_mysql()
             print "[OPT] Saving loaded comments to data/comments.p ..."
             m.save_comments_to_file('comments.p')
-
-        user_comments = None
-
+            print """Data has been extracted from MySQL.
+            Please run the application again!"""
         if(args['<comment>'] is not None):
             c = Comment(args['<comment>'])
             print '[OPT] Identifying one comment.'
             print "[*] Loading comments from data/comments.p ..."
             comments = load_serialized_comments_from_file('comments.p')
             print("[INFO] Comments loaded from file: %d" % len(comments))
-            #raw_comments = load_and_return_lines_from_csv_file("testingNew.csv")
             print "[*] Training classifier with loaded training data ..."
+        else:
+            print """Please supply a comment you want identified!\n
+            See \"infominer -h\" for help"""
