@@ -50,7 +50,8 @@ class MySQLDataExtractor(object):
         """
         Function to load in comments, gender and comment likes from SQL dump
         Returns a list that contain gender of the commenter, comment body,
-        male comment likes, female comment likes, total likes and male/female ratio comment like
+        male comment likes, female comment likes, total 
+        likes and male/female ratio comment like
         """
         cnx = self.establish_new_mysql_connection()
         cursor = cnx.cursor()

@@ -5,13 +5,22 @@ from infomine.comment import Comment
 
 
 def test_comment_init():
-    c = Comment("Hej")
-    print c
+    test_value = "Test comment"
+    c = Comment(test_value)
+    assert c.comment == test_value
 
-def test_prep_lower():
-    test_comment = 'Tror ikke hr. Lars Dahl forstår sarkasmen ...'
-    test_comment_expected = 'tror ikke hr. lars dahl forstår sarkasmen ...'
-    c = Comment(test_comment)
-    c.prep_lower()
-    actual = c.comment
-    assert actual == test_comment_expected
+
+def test_comment_comment():
+    test_value_1 = "Bad Test Comment"
+    test_value_2 = "Good Test Comment"
+    c = Comment(test_value_1)
+    c.comment = test_value_2
+    assert c.comment is not test_value_1
+    assert c.comment == test_value_2
+
+
+def test_comment_lowering():
+    test_value = "Good Test Comment"
+    c = Comment(test_value)
+    c.lower_comment()
+    assert c.comment == test_value.lower()

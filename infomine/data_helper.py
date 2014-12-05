@@ -58,7 +58,6 @@ def gender_ratio_normalize_comments(_comments):
             comments_male.append(c)
         elif c.gender == "female":
             comments_female.append(c)
-    male_diff = len(comments_male) - len(comments_female)
     random.shuffle(comments_male)
     comments_male = comments_male[:len(comments_female)]
 
