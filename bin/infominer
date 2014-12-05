@@ -6,7 +6,7 @@ An experiment in identifying text authorship
 gender using various machine learning techniques on a
 auto-trained corpus made from comments on Information.dk
 
-Usage: infomine [-v] [--mysql] (<comment> | --file <comments_file>)
+Usage: infomine [-v] (--mysql | <comment>)
        infomine [-V | --version]
        infomine [-h | --help]
 
