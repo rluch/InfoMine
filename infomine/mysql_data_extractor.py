@@ -31,6 +31,9 @@ class MySQLDataExtractor(object):
         print("[INFO] Saved %d comments to %s" % (len(self.comments), path))
 
     def load_firstnames_from_mysql(self):
+        """
+        Function to load in commenters first name from SQL dump
+        """
         cnx = self.establish_new_mysql_connection()
         cursor = cnx.cursor()
         query = ("SELECT u_name, u_uid FROM Information.inf_dtu_user")
@@ -44,6 +47,11 @@ class MySQLDataExtractor(object):
         cnx.close()
 
     def load_comments_and_gender_and_comment_likes_from_mysql(self):
+        """
+        Function to load in comments, gender and comment likes from SQL dump
+        Returns a list that contain gender of the commenter, comment body,
+        male comment likes, female comment likes, total likes and male/female ratio comment like
+        """
         cnx = self.establish_new_mysql_connection()
         cursor = cnx.cursor()
         query = ("""
@@ -51,7 +59,7 @@ class MySQLDataExtractor(object):
             As like_ids FROM Information.inf_dtu_user u,
             Information.inf_dtu_comment c,
             Information.inf_dtu_comment_flag cf where u.u_uid=c.c_uid
-            and c.c_cid = f_cid group by c.c_cid;
+            and c.c_cid = cf.f_cid group by c.c_cid;
             """)
         cursor.execute(query)
 

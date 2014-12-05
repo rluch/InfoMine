@@ -2,7 +2,7 @@
 """
 Author gender identification with machine learning.
 """
-__version__ = '0.1.0'
+__version__ = '1.0.0'
 __author__ = 'Henrik Holm, Rasmus Lundsgaard'
 __author_email__ = 's103214@student.dtu.dk, s123344@student.dtu.dk'
 import sys

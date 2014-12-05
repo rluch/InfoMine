@@ -3,11 +3,6 @@
 
 from __future__ import division
 import nltk
-##print nltk.__version__
-from collections import Counter
-#import DataCollection as dc
-import csv
-import os
 from sklearn import cross_validation
 from sklearn import svm
 from sklearn import preprocessing
@@ -17,9 +12,6 @@ from nltk.corpus import stopwords
 import numpy as np
 import sklearn
 import data_helper
-#from pylab import *
-
-import time
 
 from nltk.util import tokenwrap
 from data_helper import load_afinndk_sentiment_file_to_dict, load_serialized_comments_from_file
@@ -27,6 +19,11 @@ from data_helper import load_afinndk_sentiment_file_to_dict, load_serialized_com
 sentiment_danish = None
 
 def preprocessing(comment):
+
+    """
+    Function to clean the comment. Lower all words and remove stop words
+    """
+
     words = nltk.word_tokenize(comment)
     clean_words = [word.lower() for word in words if word.lower() not in stopwords.words('danish')]
     cleaned_comment = tokenwrap(clean_words)
@@ -35,16 +32,23 @@ def preprocessing(comment):
 
 
 def clean_comments(data_set):
+
+    """
+    Function to run the preprocessing function for each comment in the data set
+    """
+
     cleaned_data_set = []
     for ds in data_set:
-        #clean_comment = preprocessing(ds[1])
         ds.comment = preprocessing(ds.comment)
         cleaned_data_set.append((ds))
-        #cleaned_data_set.append((ds[0], clean_comment, ds[2], ds[3], ds[4], ds[5]))
     return cleaned_data_set
 
 
 def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment):
+
+    """
+    Function to extract features from the comment.
+    """
 
     features = {}
 
@@ -52,21 +56,33 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     sentences = nltk.sent_tokenize(comment)
 
     ## Kendeord / Article Words
-    article_words = ["den".decode("utf-8"), "det".decode("utf-8") , "de".decode("utf-8"), "en".decode("utf-8"), "et".decode("utf-8")]
+    article_words = ["den".decode("utf-8"), "det".decode("utf-8") , "de".decode("utf-8"),
+                     "en".decode("utf-8"), "et".decode("utf-8")]
 
     ## Pro sentence words
-    pro_sentence_words = ["ja".decode("utf-8"), "nej".decode("utf-8"), "ok".decode("utf-8"), "okay".decode("utf-8"), "jamen".decode("utf-8")]
+    pro_sentence_words = ["ja".decode("utf-8"), "nej".decode("utf-8"), "ok".decode("utf-8"),
+                          "okay".decode("utf-8"), "jamen".decode("utf-8")]
 
     gender_linked_cues_1 = ["yndig".decode("utf-8"), "charmerende".decode("utf-8"), "sød".decode("utf-8"),
                             "dejlig".decode("utf-8"), "guddommelig".decode("utf-8")]
-    gender_linked_cues_2 = ["herregud".decode("utf-8"), "hey".decode("utf-8"), "ah".decode("utf-8"), "okay".decode("utf-8")]
-    gender_linked_cues_3 = ["wow".decode("utf-8"), "fedt".decode("utf-8"), "cool".decode("utf-8"), "lækkert".decode("utf-8")]
-    gender_linked_cues_4 = ["godt".decode("utf-8"), "slags".decode("utf-8"), "en slags".decode("utf-8"), "evt".decode("utf-8"),
-                            "måske".decode("utf-8"), "evt.".decode("utf-8"), "muligivs".decode("utf-8")]
+
+    gender_linked_cues_2 = ["herregud".decode("utf-8"), "hey".decode("utf-8"), "ah".decode("utf-8"),
+                            "okay".decode("utf-8")]
+
+    gender_linked_cues_3 = ["wow".decode("utf-8"), "fedt".decode("utf-8"), "cool".decode("utf-8"),
+                            "lækkert".decode("utf-8")]
+
+    gender_linked_cues_4 = ["godt".decode("utf-8"), "slags".decode("utf-8"), "en slags".decode("utf-8"),
+                            "evt".decode("utf-8"), "måske".decode("utf-8"), "evt.".decode("utf-8"),
+                            "muligivs".decode("utf-8")]
+
     gender_linked_cues_5 = ["virkelig".decode("utf-8"), "meget".decode("utf-8"), "temmelig".decode("utf-8"),
                             "ganske".decode("utf-8"), "særligt".decode("utf-8")]
+
     gender_linked_cues_6 = ["distraherende".decode("utf-8"), "irriterende".decode("utf-8"), "rar".decode("utf-8")]
-    gender_linked_cues_7 = ["undrer".decode("utf-8"), "overveje".decode("utf-8"), "formoder".decode("utf-8"), "antager".decode("utf-8")]
+
+    gender_linked_cues_7 = ["undrer".decode("utf-8"), "overveje".decode("utf-8"), "formoder".decode("utf-8"),
+                            "antager".decode("utf-8")]
 
 
     ## Word, character and structural features
@@ -77,7 +93,7 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     features["average_length_per_word"] = len(comment)/len(words)
     features["average_length_per_sentence"] = len(comment)/len(sentences)
 
-    ## Function words
+    ## Function words features
     features["article_words"] = len(set(words).intersection(set(article_words)))
     features["pro_sentence_words"] = len(set(words).intersection(set(pro_sentence_words)))
 
@@ -90,8 +106,7 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     features["gender_linked_cues_6"] = len(set(words).intersection(set(gender_linked_cues_6)))
     features["gender_linked_cues_7"] = len(set(words).intersection(set(gender_linked_cues_7)))
 
-    # check if word appears in the dictionary created earlier.
-
+    ## Check if word appears in the dictionary created earlier.
     sentValue = []
     for word, value in sentiment.iteritems():
         if word in comment:
@@ -110,7 +125,7 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
     features["minimum_sentiment"] = min_sent_of_comment
     features["maximum_sentiment"] = max_sent_of_comment
 
-    ## Network / like features
+    ## Comment like features
     features["male_likes"] = male_likes
     features["female_likes"] = female_likes
     features["total_likes"] = total_likes
@@ -121,6 +136,10 @@ def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes
 
 def generate_feature_set(data_set, sentiment):
 
+    """
+    Function to run the feature_extractor for each comment in the data set
+    """
+
     feature_set = [(feature_extractor(comment.comment, comment.male_likes, comment.female_likes, comment.likes, comment.likes_ratio, sentiment),
                     comment.gender) for comment in data_set]
 
@@ -129,8 +148,10 @@ def generate_feature_set(data_set, sentiment):
 
 def feature_extractor_to_scikitLearn(featureset):
 
-    # sklearn algorithms use numpy arrays and nltk uses dictionary
-    # Therefore the conversion
+    """
+    Function to convert NLTK dictionary featureset to numpy arrays
+    scikit learn requires arrays for its machine learning algorithms
+    """
 
     label = []
     feature_set = []
@@ -186,6 +207,10 @@ def feature_extractor_to_scikitLearn(featureset):
 
 def standardize_features(Xfeatures):
 
+    """
+    Function to make all the features standard normal distributed
+    """
+
     X_scaled = sklearn.preprocessing.scale(Xfeatures)
 
     return X_scaled
@@ -193,6 +218,10 @@ def standardize_features(Xfeatures):
 
 def naive_bayes_classification(featuresets):
 
+    """
+    Function to train a NLTK naive bayes classifier
+    Currently no used, as sklearn is used instead
+    """
 
     splitdata = len(featuresets)/2
     train_set, test_set = featuresets[:splitdata], featuresets[splitdata:]
@@ -207,12 +236,19 @@ def naive_bayes_classification(featuresets):
 
 def classification(Xfeatures, Ylabel, algorithm):
 
+    """
+    Function to use different scikit learn algorithms for classification.
+    Requires a X numpy array and y array.
+    Four algorithms can be inputted:
+    "ada_boost", "random_forest", "svm", "logistic_regression"
+    """
+
     X = Xfeatures
     y = Ylabel
     N, M = X.shape
 
     # Crossvalidation
-    K = 5
+    K = 10
     cv = cross_validation.StratifiedKFold(y.ravel(), n_folds=K, shuffle=True)
 
     # Initialize variables
@@ -223,7 +259,7 @@ def classification(Xfeatures, Ylabel, algorithm):
     k = 0
     for train_index, test_index in cv:
 
-        # extract training and test set for current CV fold
+        # Extract training and test set for current CV fold
         X_train = X[train_index,:]
         y_train = y[train_index,:]
         X_test = X[test_index,:]
@@ -239,7 +275,7 @@ def classification(Xfeatures, Ylabel, algorithm):
         elif algorithm == "ada_boost":
             clf = ensemble.AdaBoostClassifier()
 
-        # evaluate the different classifiers
+        # Evaluate the different classifiers
         clf.fit(X_train, y_train.ravel())
         y_est = clf.predict(X_test)
         test_accuracy[k] = sklearn.metrics.accuracy_score(y_test, y_est)
@@ -260,13 +296,19 @@ def classification(Xfeatures, Ylabel, algorithm):
 
     return train_accuracy, test_accuracy, overall_feature_importance, cm, clf
 
+
 def train_classifier():
+
+    """
+    Function to train the classifier.
+    Right now our information.dk data set is hardcoded in this function
+    """
+
     comments = load_serialized_comments_from_file('comments.p')
     comments = data_helper.gender_ratio_normalize_comments(comments)
     sentiment_danish = load_afinndk_sentiment_file_to_dict()
     comments = clean_comments(comments)
 
-    #feature_set = generate_feature_set(cleaned_data_set, sentiment_danish)
     feature_set = generate_feature_set(comments, sentiment_danish)
 
     X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
@@ -278,14 +320,19 @@ def train_classifier():
     trainAcSVM, testAcSVM, featureImportance, cmSVM, modelSVM = classification(X, y, "svm")
     trainAcLR, testAcLR, featureImportance, cmLR, modelLR = classification(X, y, "logistic_regression")
 
-    #print an, cn
-    #print trainAcAB, testAcAB, featureImportanceAB, cmAB
-    #pca_plot(X, y, an, cn)
+    print an, cn
+    print trainAcAB, testAcAB, featureImportanceAB, cmAB
 
-    #print model.predict(X[0])
     return [modelAB, modelRF, modelSVM, modelLR],  sentiment_danish
 
+
 def classify(comment, model, sentiment):
+
+    """
+    Function classify a comment as either male or female.
+    A classifier/model is needed as input as well as a sentiment dictionary
+    """
+
     comments = clean_comments([comment])
     feature_set = generate_feature_set(comments, sentiment)
 
