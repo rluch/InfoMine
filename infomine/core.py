@@ -34,19 +34,13 @@ class InfoMiner(object):
             print "[OPT] Saving loaded comments to data/comments.p ..."
             m.save_comments_to_file('comments.p')
 
+        user_comments = None
+
         if(args['<comment>'] is not None):
             c = Comment(args['<comment>'])
             print '[OPT] Identifying one comment.'
-        elif(args['<comments_file>']):
-            comments = []
-            raw_comments = load_and_return_lines_from_csv_file("testingNew.csv")
-            for lines in raw_comments:
-                c = Comment(lines[1])
-                comments.append(c)
-            print "comments file %s" % len(comments)
-
-        print "[*] Loading comments from data/comments.p ..."
-        comments = load_serialized_comments_from_file('comments.p')
-        print("[INFO] Comments loaded from file: %d" % len(comments))
-        #raw_comments = load_and_return_lines_from_csv_file("testingNew.csv")
-        print "[*] Training classifier with loaded training data ..."
+            print "[*] Loading comments from data/comments.p ..."
+            comments = load_serialized_comments_from_file('comments.p')
+            print("[INFO] Comments loaded from file: %d" % len(comments))
+            #raw_comments = load_and_return_lines_from_csv_file("testingNew.csv")
+            print "[*] Training classifier with loaded training data ..."
