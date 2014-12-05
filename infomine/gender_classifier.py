@@ -19,6 +19,10 @@ import sklearn
 import data_helper
 from pylab import *
 
+import time
+
+from nltk.util import tokenwrap
+from data_helper import load_afinndk_sentiment_file_to_dict, load_serialized_comments_from_file
 
 # class gender_classifier():
 #     def tokenize_line(self, comment):
@@ -59,11 +63,11 @@ def preprocessing(comment):
 
     words = nltk.word_tokenize(comment)
 
-    clean_words = []
-
+    #clean_words = []
+    clean_words = [word.lower() for word in words if word.lower() not in stopwords.words('danish')]
     #danish_stem = nltk.stem.snowball.DanishStemmer()
-    for word in words:
-        clean_words.append(word.lower())
+    #for word in words:
+    #    clean_words.append(word.lower())
         #if word.lower() not in stopwords.words('danish'):
         #     clean_words.append(word)
 
@@ -72,18 +76,19 @@ def preprocessing(comment):
     for cw in clean_words:
         cleaned_comment = cleaned_comment + " " + cw
 
+    #cleaned_comment = tokenwrap(clean_words)
     return cleaned_comment
 
 
 def clean_comments(data_set):
 
     cleaned_data_set = []
-
     for ds in data_set:
         clean_comment = preprocessing(ds[1])
+        #ds.comment = preprocessing(ds.comment)
         cleaned_data_set.append((ds[0], clean_comment, ds[2], ds[3], ds[4], ds[5]))
-
     return cleaned_data_set
+    #return data_set
 
 
 def feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment):
@@ -164,6 +169,8 @@ def generate_feature_set(data_set, sentiment):
 
     feature_set = [(feature_extractor(comment, male_likes, female_likes, total_likes, male_likes_ratio, sentiment),
                     gender) for (gender, comment, male_likes, female_likes, total_likes, male_likes_ratio) in data_set]
+    #feature_set = [(feature_extractor(comment.comment, comment.male_likes, comment.female_likes, comment.likes, comment.likes_ratio, sentiment),
+    #                comment.gender) for comment in data_set]
 
     return feature_set
 
@@ -302,21 +309,24 @@ def classification(Xfeatures, Ylabel, algorithm):
         #print featuresets
 
 data_set = load_gender_with_comments_from_file("ModifiedDataSet")
-print data_set[0]
-print data_set[2]
+comments = load_serialized_comments_from_file('comments.p')
 
-sentiment_danish = sentiment_danish_words()
-preprocessing(data_set[0][0])
+
+#sentiment_danish = sentiment_danish_words()
+sentiment_danish = load_afinndk_sentiment_file_to_dict()
 
 cleaned_data_set = clean_comments(data_set[0:100])
-print cleaned_data_set[2]
+#comments = clean_comments(comments)
 feature_set = generate_feature_set(cleaned_data_set, sentiment_danish)
-print feature_set[0]
-X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
+#feature_set = generate_feature_set(comments, sentiment_danish)
 
+
+X, y, an, cn = feature_extractor_to_scikitLearn(feature_set)
 X = standardize_features(X)
+
 trainAcAB, testAcAB, featureImportanceAB, cmAB = classification(X, y, "ada_boost")
 trainAcRD, testAcRF, featureImportanceRF, cmRF = classification(X, y, "random_forest")
+
 trainAcSVM, testAcSVM, featureImportance, cmSVM = classification(X, y, "svm")
 trainAcLR, testAcLR, featureImportance, cmLR = classification(X, y, "logistic_regression")
 

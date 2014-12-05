@@ -66,3 +66,21 @@ def gender_ratio_normalize_comments(_comments):
     comments = comments_male + comments_female
     random.shuffle(comments)
     return comments
+
+
+def load_afinndk_sentiment_file_to_dict():
+    filepath = get_data_file_path('Nielsen2011Sentiment_afinndk-2.txt')
+    word = []
+    sentScore = []
+
+    with open(filepath, 'r') as in_file:
+        for line in in_file.readlines()[0:]:
+            # Each column in the file is tab seperated
+            word.append(line.split('\t')[0].decode("utf-8"))
+            tab_split = line.split('\t')[1]
+            newline_split = tab_split.split('\n')[0]
+            sentScore.append(newline_split)
+
+    # Pair each word with its average sentiment and return it
+    sentiment = dict(zip(word, sentScore))
+    return sentiment

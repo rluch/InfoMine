@@ -1,7 +1,7 @@
 InfoMine 
 ========
 
-Identifying Information.dk commenteer gender
+Identifying Information.dk commenter gender
 ############################################
 
 
