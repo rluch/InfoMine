@@ -72,7 +72,7 @@ def save_gender_with_comments_to_file(data_set, filename):
         #writer.writerows(itertools.izip(gender_data_set, c_data_set))
 
 def load_gender_with_comments_from_file(filename):
-
+    """ Moved to data_helper"""
     data_set_file = data_helper.get_data_file_path(filename+'.csv')
 
     data_set = []

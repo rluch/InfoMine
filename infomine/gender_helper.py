@@ -9,13 +9,15 @@ from data_helper import get_data_file_path, load_and_return_lines_from_csv_file
 class GenderHelper(object):
     """
     GenderHelper contains methods for quickly identifying the gender
-    of a given name, based upon lists of male, female and unisex names
+    of a given name, based upon lists of male, female and unisex names.
+    Data is saved as python globals so it should only be loaded once.
     """
+    malenames = []
+    femalenames = []
+    unisexnames = []
+    loaded_names_count = {'male': 0, 'female': 0}
+
     def __init__(self):
-        self.malenames = []
-        self.femalenames = []
-        self.unisexnames = []
-        self.loaded_names_count = {'male': 0, 'female': 0, 'unisex': 0}
         self.preload_names()
         self.filter_out_unisexnames()
 

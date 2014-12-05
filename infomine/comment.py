@@ -48,12 +48,15 @@ class Comment(object):
     @property
     def likes(self):
         """ Returns the calculated sum of male and female likes """
-        return sum(self._male_likes, self._female_likes)
+        return self._male_likes + self._female_likes
 
     @property
-    def like_ratio(self):
-        """ Returns the male/female like ratio """
-        return 0.0
+    def likes_ratio(self):
+        """ Returns the male ratio """
+        if self.likes > 0:
+            return float(self.male_likes) / float(self.likes)
+        else:
+            return 0.0
 
     def __str__(self):
         return '%s' % self._comment

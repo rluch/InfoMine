@@ -4,7 +4,9 @@
 data_helper.py
 """
 import os
+import sys
 import csv
+import pickle
 
 
 def get_data_file_path(filename):
@@ -28,3 +30,15 @@ def load_and_return_lines_from_csv_file(filename):
         for line in csv.reader(in_file):
             lines.append(line)
     return lines
+
+
+def load_serialized_comments_from_file(filename):
+    filepath = get_data_file_path(filename)
+    comments = []
+    try:
+        comments = pickle.load(open(filepath, 'rb'))
+    except IOError, e:
+        print "[ERROR] Comments could not loaded!"
+        print "\tRun infominer with \"--mysql\" to extract from mysql.\n"
+        sys.exit(e)
+    return comments
