@@ -34,7 +34,7 @@ class InfoMiner(object):
             print "[OPT] Saving loaded comments to data/comments.p ..."
             m.save_comments_to_file('comments.p')
 
-        if(args['<comment>'] is not False):
+        if(args['<comment>'] is not None):
             c = Comment(args['<comment>'])
             print '[OPT] Identifying one comment.'
         elif(args['<comments_file>']):

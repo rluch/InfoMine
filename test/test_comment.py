@@ -4,6 +4,10 @@
 from infomine.comment import Comment
 
 
+def test_comment_init():
+    c = Comment("Hej")
+    print c
+
 def test_prep_lower():
     test_comment = 'Tror ikke hr. Lars Dahl forstår sarkasmen ...'
     test_comment_expected = 'tror ikke hr. lars dahl forstår sarkasmen ...'
