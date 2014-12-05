@@ -36,7 +36,8 @@ class InfoMiner(object):
             Please run the application again!"""
         if(args['<comment>'] is not None):
             c = Comment(args['<comment>'])
-            print '[OPT] Identifying one comment.'
+            print '[OPT] Identifying one comment:'
+            print 'Comment says:\n\t%s' % c.comment
             print "[*] Loading comments from data/comments.p ..."
             comments = load_serialized_comments_from_file('comments.p')
             print("[INFO] Comments loaded from file: %d" % len(comments))
